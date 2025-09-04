@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { todoApi } from '../services/api';
+import { CONFIG } from '../constants/config';
+import { validateTodoText, validateTodoId, sanitizeText } from '../utils';
 import type { Todo, CreateTodoRequest, UpdateTodoRequest } from '../services/api';
 
 // Query keys for React Query
@@ -16,8 +18,18 @@ export const useTodos = () => {
   return useQuery({
     queryKey: todoKeys.lists(),
     queryFn: todoApi.getAllTodos,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+    staleTime: CONFIG.QUERY_STALE_TIME,
+    gcTime: CONFIG.QUERY_GC_TIME,
+    retry: (failureCount, error) => {
+      // Don't retry on 4xx errors
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as { status?: number }).status;
+        if (status && status >= 400 && status < 500) {
+          return false;
+        }
+      }
+      return failureCount < 3;
+    },
   });
 };
 
@@ -26,19 +38,39 @@ export const useTodosByStatus = (completed?: boolean) => {
   return useQuery({
     queryKey: todoKeys.list(completed?.toString() || 'all'),
     queryFn: () => todoApi.getTodosByStatus(completed),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: CONFIG.QUERY_STALE_TIME,
+    gcTime: CONFIG.QUERY_GC_TIME,
+    retry: (failureCount, error) => {
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as { status?: number }).status;
+        if (status && status >= 400 && status < 500) {
+          return false;
+        }
+      }
+      return failureCount < 3;
+    },
   });
 };
 
 // Hook to get single todo by ID
 export const useTodo = (id: string) => {
+  const validation = validateTodoId(id);
+  
   return useQuery({
     queryKey: todoKeys.detail(id),
     queryFn: () => todoApi.getTodoById(id),
-    enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    enabled: validation.isValid,
+    staleTime: CONFIG.QUERY_STALE_TIME,
+    gcTime: CONFIG.QUERY_GC_TIME,
+    retry: (failureCount, error) => {
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as { status?: number }).status;
+        if (status && status >= 400 && status < 500) {
+          return false;
+        }
+      }
+      return failureCount < 3;
+    },
   });
 };
 
@@ -47,7 +79,19 @@ export const useCreateTodo = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (todo: CreateTodoRequest) => todoApi.createTodo(todo),
+    mutationFn: (todo: CreateTodoRequest) => {
+      const validation = validateTodoText(todo.text);
+      if (!validation.isValid) {
+        throw new Error(validation.error);
+      }
+      
+      const sanitizedTodo = {
+        ...todo,
+        text: sanitizeText(todo.text),
+      };
+      
+      return todoApi.createTodo(sanitizedTodo);
+    },
     onSuccess: (newTodo) => {
       // Invalidate and refetch todos list
       queryClient.invalidateQueries({ queryKey: todoKeys.lists() });

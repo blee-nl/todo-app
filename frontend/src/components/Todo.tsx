@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   useTodos,
   useCreateTodo,
@@ -6,20 +6,24 @@ import {
   useToggleTodo,
   useDeleteTodo,
   useDeleteCompletedTodos,
-  useActiveTodos,
-  useCompletedTodos,
 } from "../hooks/useTodos";
+import { useErrorHandler } from "../hooks/useErrorHandler";
+import { validateTodoText } from "../utils";
 import type { Todo as TodoType } from "../services/api";
+import type { AppError } from "../utils/errorUtils";
+import { TodoItem } from "./TodoItem";
+import { CompletedTodoItem } from "./CompletedTodoItem";
+import { TodoInput } from "./TodoInput";
+import { ErrorDisplay } from "./ErrorDisplay";
 
 const Todo: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [itemErrors, setItemErrors] = useState<Record<string, AppError>>({});
 
   // React Query hooks
   const { data: allTodos = [], isLoading, error } = useTodos();
-  const { data: activeTodos = [] } = useActiveTodos();
-  const { data: completedTodos = [] } = useCompletedTodos();
 
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
@@ -27,27 +31,72 @@ const Todo: React.FC = () => {
   const deleteTodo = useDeleteTodo();
   const deleteCompletedTodos = useDeleteCompletedTodos();
 
-  // Add new todo
-  const handleAddTodo = async () => {
-    if (inputValue.trim() !== "") {
-      try {
-        await createTodo.mutateAsync({ text: inputValue.trim() });
-        setInputValue("");
-      } catch (error) {
-        console.error("Failed to create todo:", error);
+  // Error handling
+  const { handleError, currentError, clearError, retryOperation } =
+    useErrorHandler({
+      onError: (error) => {
+        console.error("Todo operation failed:", error);
+      },
+    });
+
+  // Helper functions for item-specific error handling
+  const setItemError = useCallback((todoId: string, error: AppError | null) => {
+    setItemErrors((prev) => {
+      if (error) {
+        return { ...prev, [todoId]: error };
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { [todoId]: _, ...rest } = prev;
+        return rest;
       }
+    });
+  }, []);
+
+  const clearItemError = useCallback(
+    (todoId: string) => {
+      setItemError(todoId, null);
+    },
+    [setItemError]
+  );
+
+  // Memoized computed values for better performance
+  const { activeTodos, completedTodos } = useMemo(() => {
+    const active = allTodos.filter((todo) => !todo.completed);
+    const completed = allTodos.filter((todo) => todo.completed);
+    return { activeTodos: active, completedTodos: completed };
+  }, [allTodos]);
+
+  // Add new todo
+  const handleAddTodo = useCallback(async () => {
+    const validation = validateTodoText(inputValue);
+    if (!validation.isValid) {
+      handleError(new Error(validation.error));
+      return;
     }
-  };
+
+    try {
+      await createTodo.mutateAsync({ text: inputValue.trim() });
+      setInputValue("");
+    } catch (error) {
+      handleError(error);
+    }
+  }, [inputValue, createTodo, handleError]);
 
   // Edit todo
-  const handleEditTodo = (todo: TodoType) => {
+  const handleEditTodo = useCallback((todo: TodoType) => {
     setEditingId(todo.id);
     setEditValue(todo.text);
-  };
+  }, []);
 
   // Save edit
-  const handleSaveEdit = async (id: string) => {
-    if (editValue.trim() !== "") {
+  const handleSaveEdit = useCallback(
+    async (id: string) => {
+      const validation = validateTodoText(editValue);
+      if (!validation.isValid) {
+        handleError(new Error(validation.error));
+        return;
+      }
+
       try {
         await updateTodo.mutateAsync({
           id,
@@ -56,59 +105,86 @@ const Todo: React.FC = () => {
         setEditingId(null);
         setEditValue("");
       } catch (error) {
-        console.error("Failed to update todo:", error);
+        handleError(error);
       }
-    }
-  };
+    },
+    [editValue, updateTodo, handleError]
+  );
 
   // Cancel edit
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingId(null);
     setEditValue("");
-  };
+  }, []);
 
   // Complete todo
-  const handleToggleTodo = async (id: string) => {
-    try {
-      await toggleTodo.mutateAsync(id);
-    } catch (error) {
-      console.error("Failed to toggle todo:", error);
-    }
-  };
+  const handleToggleTodo = useCallback(
+    async (id: string) => {
+      clearItemError(id);
+      try {
+        await toggleTodo.mutateAsync(id);
+      } catch (error) {
+        const appError = handleError(error);
+        setItemError(id, appError);
+      }
+    },
+    [toggleTodo, handleError, clearItemError, setItemError]
+  );
 
   // Delete todo
-  const handleDeleteTodo = async (id: string) => {
-    try {
-      await deleteTodo.mutateAsync(id);
-    } catch (error) {
-      console.error("Failed to delete todo:", error);
-    }
-  };
+  const handleDeleteTodo = useCallback(
+    async (id: string) => {
+      clearItemError(id);
+      try {
+        await deleteTodo.mutateAsync(id);
+      } catch (error) {
+        const appError = handleError(error);
+        setItemError(id, appError);
+      }
+    },
+    [deleteTodo, handleError, clearItemError, setItemError]
+  );
 
   // Remove completed todos
-  const handleRemoveCompleted = async () => {
+  const handleRemoveCompleted = useCallback(async () => {
     try {
       await deleteCompletedTodos.mutateAsync();
     } catch (error) {
-      console.error("Failed to remove completed todos:", error);
+      handleError(error);
     }
-  };
+  }, [deleteCompletedTodos, handleError]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleAddTodo();
-    }
-  };
-
-  const handleEditKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      if (editingId) {
-        handleSaveEdit(editingId);
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        handleAddTodo();
       }
-    } else if (e.key === "Escape") {
-      handleCancelEdit();
-    }
-  };
+    },
+    [handleAddTodo]
+  );
+
+  const handleInputChange = useCallback((value: string) => {
+    setInputValue(value);
+  }, []);
+
+  const handleEditValueChange = useCallback((value: string) => {
+    setEditValue(value);
+  }, []);
+
+  // Retry handlers for item-specific operations
+  const handleRetryToggle = useCallback(
+    (id: string) => {
+      retryOperation(() => handleToggleTodo(id));
+    },
+    [retryOperation, handleToggleTodo]
+  );
+
+  const handleRetryDelete = useCallback(
+    (id: string) => {
+      retryOperation(() => handleDeleteTodo(id));
+    },
+    [retryOperation, handleDeleteTodo]
+  );
 
   // Loading state
   if (isLoading) {
@@ -175,29 +251,23 @@ const Todo: React.FC = () => {
           </p>
         </div>
 
+        {/* Global Error Display */}
+        <ErrorDisplay
+          error={currentError}
+          onRetry={() => retryOperation(() => window.location.reload())}
+          onDismiss={clearError}
+          className="mb-6"
+        />
+
         {/* Add Todo Section */}
         <div className="glass rounded-3xl shadow-2xl p-6 mb-8 animate-slide-up">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="What needs to be done?"
-                className="w-full px-6 py-4 text-lg bg-white/60 border-0 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:bg-white transition-all duration-300 placeholder-slate-400 font-medium input-focus"
-                disabled={createTodo.isPending}
-              />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-            </div>
-            <button
-              onClick={handleAddTodo}
-              disabled={createTodo.isPending || !inputValue.trim()}
-              className="btn-primary px-8 py-4 text-white font-semibold rounded-2xl hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {createTodo.isPending ? "Adding..." : "Add"}
-            </button>
-          </div>
+          <TodoInput
+            value={inputValue}
+            onChange={handleInputChange}
+            onAdd={handleAddTodo}
+            onKeyPress={handleKeyPress}
+            isLoading={createTodo.isPending}
+          />
         </div>
 
         {/* Actions */}
@@ -228,70 +298,25 @@ const Todo: React.FC = () => {
                   key={todo.id}
                   className="group bg-white/60 rounded-2xl p-5 hover:bg-white/80 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-white/40"
                 >
-                  {editingId === todo.id ? (
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onKeyPress={handleEditKeyPress}
-                        className="flex-1 px-4 py-3 bg-white border-2 border-blue-500 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 font-medium input-focus"
-                        autoFocus
-                        disabled={updateTodo.isPending}
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSaveEdit(todo.id)}
-                          disabled={updateTodo.isPending}
-                          className="px-5 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-colors duration-200 font-medium shadow-lg transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {updateTodo.isPending ? "Saving..." : "Save"}
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          disabled={updateTodo.isPending}
-                          className="px-5 py-3 bg-slate-500 hover:bg-slate-600 text-white rounded-xl transition-colors duration-200 font-medium shadow-lg transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={todo.completed}
-                          onChange={() => handleToggleTodo(todo.id)}
-                          disabled={toggleTodo.isPending}
-                          className="w-6 h-6 text-blue-600 bg-white border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 cursor-pointer transition-all duration-200 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
-                      </div>
-                      <span className="flex-1 text-lg text-slate-800 font-medium">
-                        {todo.text}
-                      </span>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <button
-                          onClick={() => handleEditTodo(todo)}
-                          disabled={
-                            toggleTodo.isPending || deleteTodo.isPending
-                          }
-                          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all duration-200 font-medium shadow-lg transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTodo(todo.id)}
-                          disabled={
-                            toggleTodo.isPending || deleteTodo.isPending
-                          }
-                          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all duration-200 font-medium shadow-lg transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {deleteTodo.isPending ? "Deleting..." : "Delete"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <TodoItem
+                    todo={todo}
+                    isEditing={editingId === todo.id}
+                    editValue={editValue}
+                    onEdit={handleEditTodo}
+                    onSave={handleSaveEdit}
+                    onCancel={handleCancelEdit}
+                    onToggle={handleToggleTodo}
+                    onDelete={handleDeleteTodo}
+                    onEditValueChange={handleEditValueChange}
+                    isPending={{
+                      update: updateTodo.isPending,
+                      toggle: toggleTodo.isPending,
+                      delete: deleteTodo.isPending,
+                    }}
+                    error={itemErrors[todo.id]}
+                    onRetry={() => handleRetryToggle(todo.id)}
+                    onDismissError={() => clearItemError(todo.id)}
+                  />
                 </div>
               ))}
             </div>
@@ -311,27 +336,18 @@ const Todo: React.FC = () => {
                   key={todo.id}
                   className="bg-slate-50/80 rounded-2xl p-5 border border-slate-200/50"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        checked={todo.completed}
-                        onChange={() => handleToggleTodo(todo.id)}
-                        disabled={toggleTodo.isPending}
-                        className="w-6 h-6 text-green-600 bg-white border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-green-500/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                    </div>
-                    <span className="flex-1 text-lg text-slate-500 line-through font-medium">
-                      {todo.text}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteTodo(todo.id)}
-                      disabled={deleteTodo.isPending}
-                      className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl transition-all duration-200 font-medium shadow-lg transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {deleteTodo.isPending ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
+                  <CompletedTodoItem
+                    todo={todo}
+                    onToggle={handleToggleTodo}
+                    onDelete={handleDeleteTodo}
+                    isPending={{
+                      toggle: toggleTodo.isPending,
+                      delete: deleteTodo.isPending,
+                    }}
+                    error={itemErrors[todo.id]}
+                    onRetry={() => handleRetryDelete(todo.id)}
+                    onDismissError={() => clearItemError(todo.id)}
+                  />
                 </div>
               ))}
             </div>

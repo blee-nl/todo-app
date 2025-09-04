@@ -1,33 +1,41 @@
 import axios from 'axios';
-
-// API base configuration
-const API_BASE_URL = 'http://localhost:5001';
+import { CONFIG } from '../constants/config';
+import { createAppError, isNetworkError } from '../utils';
 
 // Create axios instance with default config
 export const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: CONFIG.API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: CONFIG.API_TIMEOUT,
 });
 
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
-    return Promise.reject(error);
+    const appError = createAppError(error);
+    
+    // Log different types of errors appropriately
+    if (isNetworkError(error)) {
+      console.error('Network Error:', appError.message);
+    } else {
+      console.error('API Error:', appError);
+    }
+    
+    return Promise.reject(appError);
   }
 );
 
-// Todo interface matching backend
+// Todo interface
 export interface Todo {
   id: string;
   text: string;
   completed: boolean;
   createdAt: string;
   updatedAt: string;
+  completedAt?: string; // Date when todo was completed
 }
 
 // Create todo request interface
@@ -48,6 +56,7 @@ export interface ApiResponse<T> {
   message?: string;
   count?: number;
 }
+
 
 // Todo API functions
 export const todoApi = {

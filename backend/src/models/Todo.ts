@@ -6,6 +6,7 @@ export interface ITodo extends Document {
   completed: boolean;
   createdAt: Date;
   updatedAt: Date;
+  completedAt?: Date; // Date when todo was completed
 }
 
 // Todo schema
@@ -19,6 +20,10 @@ const todoSchema = new Schema<ITodo>({
   completed: {
     type: Boolean,
     default: false
+  },
+  completedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true, // Automatically adds createdAt and updatedAt
@@ -34,13 +39,24 @@ const todoSchema = new Schema<ITodo>({
 
 // Index for better query performance
 todoSchema.index({ completed: 1, createdAt: -1 });
+todoSchema.index({ completedAt: -1 });
 todoSchema.index({ text: 'text' }); // Text search index
 
-// Pre-save middleware for validation
+// Pre-save middleware for validation and completedAt logic
 todoSchema.pre('save', function(next) {
   if (this.text.trim().length === 0) {
     next(new Error('Todo text cannot be empty'));
   }
+  
+  // Set completedAt when todo is completed
+  if (this.isModified('completed')) {
+    if (this.completed && !this.completedAt) {
+      this.completedAt = new Date();
+    } else if (!this.completed) {
+      this.completedAt = undefined;
+    }
+  }
+  
   next();
 });
 
@@ -52,6 +68,11 @@ todoSchema.statics.findByStatus = function(completed: boolean) {
 // Instance method to toggle completion
 todoSchema.methods.toggleComplete = function() {
   this.completed = !this.completed;
+  if (this.completed && !this.completedAt) {
+    this.completedAt = new Date();
+  } else if (!this.completed) {
+    this.completedAt = undefined;
+  }
   return this.save();
 };
 
