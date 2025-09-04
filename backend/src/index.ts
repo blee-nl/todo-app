@@ -13,7 +13,7 @@ const port: number = parseInt(process.env.PORT || '5001', 10);
 
 // CORS configuration
 const corsOptions: cors.CorsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:5001', 'http://localhost:5173'], // Frontend and direct browser access allowed
+  origin: ['http://localhost:3000', 'http://localhost:5001', 'http://localhost:5173', 'http://localhost:5174'], // Frontend and direct browser access allowed
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true,
 };
