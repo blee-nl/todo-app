@@ -227,7 +227,7 @@ pnpm test:watch        # Watch mode
 ### Technology Stack
 
 **Frontend:**
-- React 18 with TypeScript
+- React 19 with TypeScript
 - Vite for build tooling
 - Tailwind CSS for styling
 - React Query for data fetching

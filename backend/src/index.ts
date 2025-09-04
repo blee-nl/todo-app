@@ -3,6 +3,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import todoRoutes from './routes/todoRoutes';
+import docsRoutes from './routes/docsRoutes';
 import { rateLimit } from './middleware/validation';
 
 // Load environment variables
@@ -53,8 +54,42 @@ mongoose
 
 // API routes
 app.use('/api/todos', todoRoutes);
+app.use('/api/docs', docsRoutes);
 
-// Health check route
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     description: Check the health status of the API server and database connection
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Server is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "OK"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2024-01-01T00:00:00.000Z"
+ *                 uptime:
+ *                   type: number
+ *                   description: Server uptime in seconds
+ *                   example: 3600
+ *                 environment:
+ *                   type: string
+ *                   example: "development"
+ *                 database:
+ *                   type: string
+ *                   enum: [connected, disconnected]
+ *                   example: "connected"
+ */
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',
@@ -75,7 +110,8 @@ app.get('/', (req: Request, res: Response) => {
     endpoints: {
       health: '/health',
       todos: '/api/todos',
-      docs: '/api/docs' // You can add API documentation here
+      docs: '/api/docs',
+      docsOverview: '/api/docs/overview'
     }
   });
 });
@@ -90,6 +126,8 @@ app.use((req: Request, res: Response) => {
     availableEndpoints: [
       'GET /',
       'GET /health',
+      'GET /api/docs',
+      'GET /api/docs/overview',
       'GET /api/todos',
       'POST /api/todos',
       'PUT /api/todos/:id',
@@ -114,6 +152,7 @@ app.listen(port, () => {
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 Health check: http://localhost:${port}/health`);
   console.log(`📋 API endpoints: http://localhost:${port}/api/todos`);
+  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 });
 
 // Graceful shutdown
