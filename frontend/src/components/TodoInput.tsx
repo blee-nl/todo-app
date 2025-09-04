@@ -4,7 +4,7 @@ interface TodoInputProps {
   value: string;
   onChange: (value: string) => void;
   onAdd: () => void;
-  onKeyPress: (e: React.KeyboardEvent) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
   isLoading: boolean;
   disabled?: boolean;
 }
@@ -13,7 +13,7 @@ export const TodoInput: React.FC<TodoInputProps> = ({
   value,
   onChange,
   onAdd,
-  onKeyPress,
+  onKeyDown,
   isLoading,
   disabled = false,
 }) => {
@@ -24,7 +24,7 @@ export const TodoInput: React.FC<TodoInputProps> = ({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onKeyPress={onKeyPress}
+          onKeyDown={onKeyDown}
           placeholder="What needs to be done?"
           className="w-full px-6 py-4 text-lg bg-white/60 border-0 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:bg-white transition-all duration-300 placeholder-slate-400 font-medium input-focus"
           disabled={isLoading || disabled}

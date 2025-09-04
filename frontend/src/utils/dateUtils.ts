@@ -14,24 +14,31 @@ export const formatDate = (dateString: string): string => {
   } else if (diffInHours < 48) {
     return 'Yesterday';
   } else {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-    });
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const day = date.getDate();
+    const year = date.getFullYear();
+    
+    if (year !== now.getFullYear()) {
+      return `${month} ${day}, ${year}`;
+    } else {
+      return `${month} ${day}`;
+    }
   }
 };
 
 // Utility function to format full date and time
 export const formatFullDate = (dateString: string): string => {
   const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const day = date.getDate();
+  const year = date.getFullYear();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  const displayMinutes = minutes.toString().padStart(2, '0');
+  
+  return `${month} ${day}, ${year} at ${displayHours}:${displayMinutes} ${ampm}`;
 };
 
 // Utility function to format relative time (e.g., "2 minutes ago", "3 days ago")

@@ -30,7 +30,7 @@ export const validateTodoText = (text: string): ValidationResult => {
 
 // Validate todo ID
 export const validateTodoId = (id: string): ValidationResult => {
-  if (!id || typeof id !== 'string') {
+  if (typeof id !== 'string') {
     return {
       isValid: false,
       error: 'Invalid todo ID',

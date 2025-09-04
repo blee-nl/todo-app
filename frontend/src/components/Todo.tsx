@@ -154,7 +154,7 @@ const Todo: React.FC = () => {
     }
   }, [deleteCompletedTodos, handleError]);
 
-  const handleKeyPress = useCallback(
+  const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter") {
         handleAddTodo();
@@ -265,7 +265,7 @@ const Todo: React.FC = () => {
             value={inputValue}
             onChange={handleInputChange}
             onAdd={handleAddTodo}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             isLoading={createTodo.isPending}
           />
         </div>

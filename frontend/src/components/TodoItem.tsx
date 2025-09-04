@@ -39,7 +39,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   onRetry,
   onDismissError,
 }) => {
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       onSave(todo.id);
     } else if (e.key === "Escape") {
@@ -54,7 +54,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           type="text"
           value={editValue}
           onChange={(e) => onEditValueChange(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           className="flex-1 px-4 py-3 bg-white border-2 border-blue-500 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 font-medium input-focus"
           autoFocus
           disabled={isPending.update}
