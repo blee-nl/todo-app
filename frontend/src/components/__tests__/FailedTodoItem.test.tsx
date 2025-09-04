@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import CompletedTodoItem from "../CompletedTodoItem";
+import FailedTodoItem from "../FailedTodoItem";
 import type { Todo } from "../../services/api";
 
 // Mock the hooks
@@ -48,17 +48,17 @@ const createWrapper = () => {
 
 const mockTodo: Todo = {
   id: "1",
-  text: "Test completed todo",
+  text: "Test failed todo",
   type: "one-time",
-  state: "completed",
+  state: "failed",
   dueAt: "2024-12-31T23:59:59.000Z",
   activatedAt: "2024-01-01T00:00:00.000Z",
-  completedAt: "2024-01-02T00:00:00.000Z",
+  failedAt: "2024-01-02T00:00:00.000Z",
   createdAt: "2024-01-01T00:00:00.000Z",
   updatedAt: "2024-01-02T00:00:00.000Z",
 };
 
-describe("CompletedTodoItem", () => {
+describe("FailedTodoItem", () => {
   const mockOnError = vi.fn();
 
   beforeEach(() => {
@@ -66,15 +66,15 @@ describe("CompletedTodoItem", () => {
   });
 
   it("should render todo text", () => {
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
-    expect(screen.getByText("Test completed todo")).toBeInTheDocument();
+    expect(screen.getByText("Test failed todo")).toBeInTheDocument();
   });
 
   it("should render task type", () => {
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -82,23 +82,23 @@ describe("CompletedTodoItem", () => {
   });
 
   it("should render due date", () => {
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
     expect(screen.getByText("Was due:")).toBeInTheDocument();
   });
 
-  it("should render completed date", () => {
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+  it("should render failed date", () => {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
-    expect(screen.getByText(/Completed/)).toBeInTheDocument();
+    expect(screen.getByText(/Failed/)).toBeInTheDocument();
   });
 
   it("should render reactivate button", () => {
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -106,7 +106,7 @@ describe("CompletedTodoItem", () => {
   });
 
   it("should render delete button", () => {
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -116,7 +116,7 @@ describe("CompletedTodoItem", () => {
   it("should call reactivateTodo when reactivate button is clicked", async () => {
     mockReactivateTodo.mockResolvedValue({});
 
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -141,7 +141,7 @@ describe("CompletedTodoItem", () => {
   it("should call deleteTodo when delete button is clicked", async () => {
     mockDeleteTodo.mockResolvedValue({});
 
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -157,7 +157,7 @@ describe("CompletedTodoItem", () => {
     const error = new Error("Reactivation failed");
     mockReactivateTodo.mockRejectedValue(error);
 
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -180,7 +180,7 @@ describe("CompletedTodoItem", () => {
     const error = new Error("Deletion failed");
     mockDeleteTodo.mockRejectedValue(error);
 
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -198,7 +198,7 @@ describe("CompletedTodoItem", () => {
       isReactivation: true,
     };
 
-    render(<CompletedTodoItem todo={reactivatedTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={reactivatedTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -206,7 +206,7 @@ describe("CompletedTodoItem", () => {
   });
 
   it("should handle mobile layout", () => {
-    render(<CompletedTodoItem todo={mockTodo} onError={mockOnError} />, {
+    render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -217,19 +217,5 @@ describe("CompletedTodoItem", () => {
       "space-y-2",
       "ml-4"
     );
-  });
-
-  it("should handle desktop layout", () => {
-    render(
-      <CompletedTodoItem
-        todo={mockTodo}
-        onError={mockOnError}
-        isMobile={false}
-      />,
-      { wrapper: createWrapper() }
-    );
-
-    const buttonContainer = screen.getByText("Re-activate").closest("div");
-    expect(buttonContainer).toHaveClass("flex-col", "space-y-2");
   });
 });

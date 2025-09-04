@@ -1,49 +1,59 @@
 # 📝 Todo App
 
-A modern, full-stack todo application built with React, TypeScript, Node.js, and MongoDB. This app provides a complete task management solution with a beautiful, responsive interface and robust backend API.
+A modern, full-stack todo application built with React, TypeScript, Node.js, and MongoDB. This app provides a complete task management solution with advanced features, beautiful responsive interface, and robust backend API.
 
 ## 🌟 Features
 
 ### ✨ Core Functionality
-- **Add Todos**: Create new tasks with a simple input field
-- **Edit Todos**: Click on any todo to edit its text inline
-- **Delete Todos**: Remove individual todos or bulk delete completed ones
-- **Mark Complete**: Toggle todo completion status with a single click
-- **Cancel Editing**: Escape key or click outside to cancel editing mode
+- **Task Types**: Support for `one-time` and `daily` tasks
+- **Task States**: Four categories - Pending, Active, Completed, Failed
+- **Add Todos**: Create new tasks with due dates for one-time tasks
+- **Edit Todos**: Inline editing for active tasks only
+- **Delete Todos**: Remove individual todos or bulk delete completed/failed ones
+- **Mark Complete**: Move active tasks to completed state
+- **Re-activation**: Re-activate completed or failed tasks with new due dates
 
 ### 🎨 User Interface
-- **Apple-inspired Design**: Clean, modern interface with glass morphism effects
-- **Responsive Layout**: Optimized for mobile, tablet, and desktop devices
-- **Smooth Animations**: CSS transitions and hover effects for better UX
-- **Dark/Light Theme**: Beautiful color scheme with proper contrast
-- **Real-time Updates**: Instant UI updates with optimistic rendering
+- **iOS Reminders-inspired Design**: Clean, modern interface with rounded cards
+- **Responsive Layout**: Desktop sidebar + mobile bottom tabs
+- **Heroicons Integration**: Beautiful, consistent iconography
+- **Custom Calendar Styling**: Enhanced date/time picker components
+- **Smooth Animations**: CSS transitions and hover effects
+- **Real-time Updates**: Instant UI updates with React Query
 
 ### 📊 Task Management
-- **Active Tasks**: View and manage incomplete todos
-- **Completed Tasks**: Separate section for finished tasks (read-only)
-- **Timestamps**: Display creation, update, and completion dates
-- **Status Filtering**: Filter todos by completion status
-- **Bulk Operations**: Delete all completed todos at once
+- **Pending Tasks**: Created but not yet active (editable, deletable)
+- **Active Tasks**: Ongoing tasks (editable, can be completed or failed)
+- **Completed Tasks**: Read-only list with re-activation and bulk delete
+- **Failed Tasks**: Read-only list with re-activation and bulk delete
+- **Due Dates**: Calendar picker for one-time tasks
+- **Timestamps**: Display creation, activation, completion, and failure dates
+- **Duplicate Prevention**: Active tasks cannot be duplicated by content
 
 ### 🔧 Technical Features
 - **TypeScript**: Full type safety across frontend and backend
-- **React Query**: Efficient data fetching and caching
+- **React Query (TanStack Query)**: Efficient data fetching and caching
 - **Error Handling**: Comprehensive error management with user feedback
 - **Input Validation**: Client and server-side validation
 - **Rate Limiting**: API protection against abuse
 - **Testing**: 80%+ test coverage with Jest and React Testing Library
+- **Responsive Design**: Mobile-first approach with desktop enhancements
+- **Custom CSS**: Tailwind CSS + custom styles for enhanced UI
 
 ## 🖥️ Screenshots
 
 ### Desktop View
-- Clean, organized layout with active and completed todo sections
+- Left sidebar with navigation and statistics
+- Main content area with task lists
+- Clean, organized layout with four task categories
 - Inline editing with smooth transitions
 - Timestamp display for all tasks
 
 ### Mobile View
-- Touch-friendly interface
-- Responsive design that works on all screen sizes
-- Optimized for one-handed use
+- Top bar with current list title
+- Bottom tab navigation for easy switching
+- Floating action button for adding tasks
+- Touch-friendly interface optimized for one-handed use
 
 ## 🚀 Quick Start
 
@@ -125,40 +135,50 @@ todo-app/
 ## 🎯 How to Use
 
 ### Adding a Todo
-1. Type your task in the input field at the top
-2. Press Enter or click the "Add Todo" button
-3. Your todo appears in the active tasks section
+1. Click the "Add Task" button or floating action button
+2. Select task type (one-time or daily)
+3. For one-time tasks, set a due date using the calendar picker
+4. Enter your task description
+5. Click "Add Task" to create
 
-### Editing a Todo
-1. Click on any active todo text
-2. The todo enters edit mode with a text input
-3. Make your changes and press Enter to save
-4. Press Escape to cancel editing
+### Task States
+- **Pending**: Newly created tasks waiting to be activated
+- **Active**: Currently working on these tasks
+- **Completed**: Successfully finished tasks
+- **Failed**: Tasks that weren't completed on time
 
-### Completing a Todo
-1. Click the checkbox next to any active todo
-2. The todo moves to the completed section
-3. Completed todos show the completion timestamp
+### Managing Tasks
+- **Activate**: Move pending tasks to active state
+- **Complete**: Mark active tasks as completed
+- **Re-activate**: Bring completed/failed tasks back to active
+- **Edit**: Only active tasks can be edited inline
+- **Delete**: Remove individual tasks or bulk delete completed/failed
 
-### Deleting Todos
-- **Single Todo**: Click the delete button (trash icon) next to any todo
-- **All Completed**: Click "Delete All Completed" button in the completed section
+### Navigation
+- **Desktop**: Use the left sidebar to switch between task categories
+- **Mobile**: Use the bottom tab bar to navigate between lists
+- **Statistics**: View task counts and timezone information in the sidebar
 
 ### Viewing Timestamps
-- **Created**: When the todo was first created
-- **Updated**: Last modification time
-- **Completed**: When the todo was marked as complete (for completed todos)
+- **Created**: When the task was first created
+- **Activated**: When the task was moved to active state
+- **Completed**: When the task was marked as complete
+- **Failed**: When the task was marked as failed
 
 ## 🔌 API Endpoints
 
 ### Todos
-- `GET /api/todos` - Get all todos
+- `GET /api/todos` - Get all todos grouped by state
 - `GET /api/todos/:id` - Get single todo by ID
 - `POST /api/todos` - Create new todo
-- `PUT /api/todos/:id` - Update todo
-- `PATCH /api/todos/:id/toggle` - Toggle todo completion
+- `PUT /api/todos/:id` - Update todo (text only for active tasks)
+- `PATCH /api/todos/:id/activate` - Activate pending todo
+- `PATCH /api/todos/:id/complete` - Complete active todo
+- `PATCH /api/todos/:id/fail` - Mark active todo as failed
+- `PATCH /api/todos/:id/reactivate` - Re-activate completed/failed todo
 - `DELETE /api/todos/:id` - Delete single todo
 - `DELETE /api/todos/completed` - Delete all completed todos
+- `DELETE /api/todos/failed` - Delete all failed todos
 
 ### Utility
 - `GET /` - API information

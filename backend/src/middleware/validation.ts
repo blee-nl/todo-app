@@ -9,7 +9,7 @@ interface ValidationError {
 // Todo validation middleware
 export const validateTodo = (req: Request, res: Response, next: NextFunction): void => {
   const errors: ValidationError[] = [];
-  const { text, completed } = req.body;
+  const { text, type, dueAt, newDueAt } = req.body;
 
   // Validate text field
   if (req.method === 'POST' || (req.method === 'PUT' && text !== undefined)) {
@@ -26,12 +26,58 @@ export const validateTodo = (req: Request, res: Response, next: NextFunction): v
     }
   }
 
-  // Validate completed field
-  if (completed !== undefined && typeof completed !== 'boolean') {
-    errors.push({
-      field: 'completed',
-      message: 'Completed field must be a boolean value'
-    });
+  // Validate type field (for POST requests)
+  if (req.method === 'POST') {
+    if (!type) {
+      errors.push({
+        field: 'type',
+        message: 'Task type is required'
+      });
+    } else if (!['one-time', 'daily'].includes(type)) {
+      errors.push({
+        field: 'type',
+        message: 'Task type must be "one-time" or "daily"'
+      });
+    }
+  }
+
+  // Validate dueAt field for one-time tasks
+  if (req.method === 'POST' && type === 'one-time') {
+    if (!dueAt) {
+      errors.push({
+        field: 'dueAt',
+        message: 'Due date is required for one-time tasks'
+      });
+    } else {
+      const dueDate = new Date(dueAt);
+      if (isNaN(dueDate.getTime())) {
+        errors.push({
+          field: 'dueAt',
+          message: 'Due date must be a valid date'
+        });
+      } else if (dueDate <= new Date()) {
+        errors.push({
+          field: 'dueAt',
+          message: 'Due date must be in the future'
+        });
+      }
+    }
+  }
+
+  // Validate newDueAt field for re-activation
+  if (req.method === 'PATCH' && req.path.includes('/reactivate') && newDueAt) {
+    const dueDate = new Date(newDueAt);
+    if (isNaN(dueDate.getTime())) {
+      errors.push({
+        field: 'newDueAt',
+        message: 'New due date must be a valid date'
+      });
+    } else if (dueDate <= new Date()) {
+      errors.push({
+        field: 'newDueAt',
+        message: 'New due date must be in the future'
+      });
+    }
   }
 
   // If there are validation errors, return them

@@ -4,15 +4,12 @@ import { useReactivateTodo, useDeleteTodo } from "../hooks/useTodos";
 import { formatDate, formatFullDate } from "../utils/dateUtils";
 import CustomDateTimePicker from "./CustomDateTimePicker";
 
-interface CompletedTodoItemProps {
+interface FailedTodoItemProps {
   todo: Todo;
   onError?: (error: Error) => void;
 }
 
-const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
-  todo,
-  onError,
-}) => {
+const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
   const [showReactivateForm, setShowReactivateForm] = useState(false);
   const [newDueAt, setNewDueAt] = useState("");
 
@@ -47,12 +44,14 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
     return now.toISOString().slice(0, 16);
   };
 
+  const isOverdue = todo.dueAt && new Date(todo.dueAt) < new Date();
+
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4">
+    <div className="bg-white border border-red-200 rounded-2xl p-4">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-3">
-            <span className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-full">
+            <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
               {todo.type}
             </span>
             {todo.isReactivation && (
@@ -60,14 +59,23 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
                 Re-activated
               </span>
             )}
+            {isOverdue && (
+              <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                Overdue
+              </span>
+            )}
           </div>
 
-          <p className="text-gray-600 line-through mb-3 leading-relaxed">
+          <p className="text-gray-900 font-medium mb-3 leading-relaxed">
             {todo.text}
           </p>
 
           {todo.dueAt && (
-            <div className="text-sm text-gray-500 mb-3 flex items-center">
+            <div
+              className={`text-sm mb-3 flex items-center ${
+                isOverdue ? "text-red-600" : "text-gray-500"
+              }`}
+            >
               <svg
                 className="w-4 h-4 mr-1"
                 fill="none"
@@ -121,7 +129,7 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
                 Activated {formatDate(todo.activatedAt)}
               </div>
             )}
-            {todo.completedAt && (
+            {todo.failedAt && (
               <div className="flex items-center">
                 <svg
                   className="w-3 h-3 mr-1"
@@ -133,10 +141,10 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-                Completed {formatDate(todo.completedAt)}
+                Failed {formatDate(todo.failedAt)}
               </div>
             )}
           </div>
@@ -204,4 +212,4 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
   );
 };
 
-export default CompletedTodoItem;
+export default FailedTodoItem;

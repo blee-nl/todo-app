@@ -21,8 +21,26 @@ describe('Validation Middleware', () => {
   });
 
   describe('validateTodo', () => {
-    it('should pass validation for valid todo data', () => {
-      mockReq.body = { text: 'Valid todo text' };
+    it('should pass validation for valid one-time todo data', () => {
+      const futureDate = new Date(Date.now() + 86400000).toISOString(); // Tomorrow
+      mockReq.body = { 
+        text: 'Valid todo text',
+        type: 'one-time',
+        dueAt: futureDate
+      };
+      mockReq.method = 'POST';
+
+      validateTodo(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockStatus).not.toHaveBeenCalled();
+    });
+
+    it('should pass validation for valid daily todo data', () => {
+      mockReq.body = { 
+        text: 'Valid daily todo',
+        type: 'daily'
+      };
       mockReq.method = 'POST';
 
       validateTodo(mockReq as Request, mockRes as Response, mockNext);
@@ -32,7 +50,12 @@ describe('Validation Middleware', () => {
     });
 
     it('should reject empty text', () => {
-      mockReq.body = { text: '' };
+      const futureDate = new Date(Date.now() + 86400000).toISOString(); // Tomorrow
+      mockReq.body = { 
+        text: '',
+        type: 'one-time',
+        dueAt: futureDate
+      };
       mockReq.method = 'POST';
 
       validateTodo(mockReq as Request, mockRes as Response, mockNext);
@@ -44,6 +67,72 @@ describe('Validation Middleware', () => {
         details: [{
           field: 'text',
           message: 'Todo text is required and cannot be empty'
+        }]
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should reject missing type', () => {
+      const futureDate = new Date(Date.now() + 86400000).toISOString(); // Tomorrow
+      mockReq.body = { 
+        text: 'Valid todo text',
+        dueAt: futureDate
+      };
+      mockReq.method = 'POST';
+
+      validateTodo(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockJson).toHaveBeenCalledWith({
+        success: false,
+        error: 'Validation failed',
+        details: [{
+          field: 'type',
+          message: 'Task type is required'
+        }]
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should reject one-time todo without dueAt', () => {
+      mockReq.body = { 
+        text: 'Valid todo text',
+        type: 'one-time'
+      };
+      mockReq.method = 'POST';
+
+      validateTodo(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockJson).toHaveBeenCalledWith({
+        success: false,
+        error: 'Validation failed',
+        details: [{
+          field: 'dueAt',
+          message: 'Due date is required for one-time tasks'
+        }]
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should reject past due date for one-time tasks', () => {
+      const pastDate = new Date(Date.now() - 86400000).toISOString(); // Yesterday
+      mockReq.body = { 
+        text: 'Valid todo text',
+        type: 'one-time',
+        dueAt: pastDate
+      };
+      mockReq.method = 'POST';
+
+      validateTodo(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockJson).toHaveBeenCalledWith({
+        success: false,
+        error: 'Validation failed',
+        details: [{
+          field: 'dueAt',
+          message: 'Due date must be in the future'
         }]
       });
       expect(mockNext).not.toHaveBeenCalled();

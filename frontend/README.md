@@ -1,26 +1,31 @@
 # Todo App Frontend
 
-A modern React todo application built with TypeScript, Tailwind CSS, and React Query.
+A modern React todo application built with TypeScript, Tailwind CSS, and React Query. Features advanced task management with four states, responsive design, and comprehensive testing.
 
 ## Features
 
-- ✅ Add, edit, delete, and complete todos
-- 🎨 Apple-inspired design with glass morphism effects
-- 📱 Responsive design for mobile, tablet, and desktop
-- ⚡ Real-time updates with React Query
-- 🛡️ Comprehensive error handling and validation
-- 🧪 80%+ test coverage with React Testing Library
-- ♿ Full accessibility support
+- ✅ **Task Management**: Add, edit, delete, and complete todos with four states (Pending, Active, Completed, Failed)
+- 🎨 **iOS Reminders-inspired Design**: Clean, modern interface with rounded cards and glass morphism effects
+- 📱 **Responsive Layout**: Desktop sidebar + mobile bottom tabs with floating action button
+- ⚡ **Real-time Updates**: React Query for efficient data fetching and caching
+- 🛡️ **Comprehensive Error Handling**: User-friendly error messages and validation
+- 🧪 **80%+ Test Coverage**: React Testing Library with comprehensive test suite
+- ♿ **Full Accessibility**: ARIA labels, keyboard navigation, and screen reader support
+- 🎯 **Task Types**: Support for one-time and daily tasks with due dates
+- 🔄 **Re-activation**: Bring completed/failed tasks back to active state
+- 🗑️ **Bulk Operations**: Delete all completed or failed tasks at once
 
 ## Tech Stack
 
 - **React 19** - Latest React with concurrent features
 - **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
+- **Tailwind CSS** - Utility-first CSS framework with custom styles
 - **React Query (TanStack Query)** - Server state management
+- **Heroicons** - Beautiful, consistent iconography
 - **Vite** - Fast build tool and dev server
 - **Vitest** - Fast unit testing framework
 - **React Testing Library** - Component testing utilities
+- **MSW (Mock Service Worker)** - API mocking for tests
 
 ## Getting Started
 
@@ -141,26 +146,37 @@ This approach is recommended by the React Testing Library team for React 19 proj
 ```
 src/
 ├── components/           # React components
-│   ├── Todo.tsx         # Main todo component
-│   ├── TodoItem.tsx     # Individual todo item
-│   ├── CompletedTodoItem.tsx
-│   ├── TodoInput.tsx    # Input component
-│   ├── ErrorDisplay.tsx # Error display component
-│   └── InlineErrorDisplay.tsx
+│   ├── TodoApp.tsx      # Main app component
+│   ├── Layout.tsx       # Responsive layout wrapper
+│   ├── Sidebar.tsx      # Desktop sidebar navigation
+│   ├── BottomTabBar.tsx # Mobile bottom navigation
+│   ├── TopBar.tsx       # Top bar with title and add button
+│   ├── FloatingActionButton.tsx # Mobile FAB
+│   ├── TaskList.tsx     # Task list with delete all functionality
+│   ├── TaskModal.tsx    # Modal for adding/editing tasks
+│   ├── TodoInput.tsx    # Input component for new tasks
+│   ├── PendingTodoItem.tsx    # Pending task component
+│   ├── ActiveTodoItem.tsx     # Active task component
+│   ├── CompletedTodoItem.tsx  # Completed task component
+│   ├── FailedTodoItem.tsx     # Failed task component
+│   └── __tests__/       # Component tests
 ├── hooks/               # Custom React hooks
 │   ├── useTodos.ts      # Todo-related hooks
-│   ├── useErrorHandler.ts
-│   ├── useDebounce.ts
-│   └── useLoadingState.ts
+│   └── __tests__/       # Hook tests
 ├── services/            # API services
-│   └── api.ts           # Axios configuration and API calls
+│   ├── api.ts           # Axios configuration and API calls
+│   └── __tests__/       # API tests
 ├── utils/               # Utility functions
 │   ├── dateUtils.ts     # Date formatting
 │   ├── errorUtils.ts    # Error handling
 │   ├── validation.ts    # Input validation
-│   └── index.ts         # Utility exports
+│   ├── index.ts         # Utility exports
+│   └── __tests__/       # Utility tests
 ├── constants/           # Configuration
-│   └── config.ts        # App configuration
+│   ├── config.ts        # App configuration
+│   └── __tests__/       # Config tests
+├── styles/              # Custom CSS
+│   └── calendar.css     # Custom calendar styling
 └── test/                # Testing utilities
     ├── setup.ts         # Test setup
     ├── utils.tsx        # Custom render

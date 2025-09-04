@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { mockTodos, mockCreateTodoRequest } from '../utils'
+import { mockTodos } from '../utils'
 
 export const handlers = [
   // Get all todos

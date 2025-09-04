@@ -1,12 +1,12 @@
 # Todo Backend API
 
-A TypeScript-based REST API for the Todo application built with Express.js and MongoDB.
+A TypeScript-based REST API for the Todo application built with Express.js and MongoDB. Features advanced task management with four states, duplicate prevention, and comprehensive testing.
 
 ## Features
 
 - ✨ **Full TypeScript Support** - Type-safe development with interfaces and types
-- 🚀 **RESTful API** - Complete CRUD operations for todos
-- 🗄️ **MongoDB Integration** - Mongoose ODM with proper schemas
+- 🚀 **RESTful API** - Complete CRUD operations for todos with advanced state management
+- 🗄️ **MongoDB Integration** - Mongoose ODM with proper schemas and validation
 - 🔒 **Input Validation** - Request validation and error handling
 - 📊 **Rate Limiting** - Basic rate limiting for API protection
 - 🎯 **Error Handling** - Comprehensive error handling with proper HTTP status codes
@@ -14,17 +14,25 @@ A TypeScript-based REST API for the Todo application built with Express.js and M
 - 🔄 **Hot Reload** - Development server with automatic reloading
 - 🧪 **Comprehensive Testing** - Jest test suite with 80%+ coverage
 - 🏗️ **In-Memory Testing** - MongoDB Memory Server for isolated tests
+- 🎯 **Task Types** - Support for one-time and daily tasks
+- 🔄 **State Management** - Four task states: pending, active, completed, failed
+- 🚫 **Duplicate Prevention** - Prevents duplicate active tasks by content
+- 📅 **Due Date Handling** - Calendar integration for one-time tasks
 
 ## API Endpoints
 
 ### Todos
-- `GET /api/todos` - Get all todos
+- `GET /api/todos` - Get all todos grouped by state
 - `GET /api/todos/:id` - Get single todo by ID
-- `POST /api/todos` - Create new todo
-- `PUT /api/todos/:id` - Update todo
-- `PATCH /api/todos/:id/toggle` - Toggle todo completion
+- `POST /api/todos` - Create new todo (with duplicate prevention)
+- `PUT /api/todos/:id` - Update todo (text only for active tasks)
+- `PATCH /api/todos/:id/activate` - Activate pending todo
+- `PATCH /api/todos/:id/complete` - Complete active todo
+- `PATCH /api/todos/:id/fail` - Mark active todo as failed
+- `PATCH /api/todos/:id/reactivate` - Re-activate completed/failed todo
 - `DELETE /api/todos/:id` - Delete single todo
 - `DELETE /api/todos/completed` - Delete all completed todos
+- `DELETE /api/todos/failed` - Delete all failed todos
 
 ### Utility
 - `GET /` - API information

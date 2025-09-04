@@ -1,110 +1,262 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { TodoInput } from "../TodoInput";
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import TodoInput from "../TodoInput";
+
+// Mock the hooks
+const mockCreateTodo = vi.fn();
+
+vi.mock("../../hooks/useTodos", () => ({
+  useCreateTodo: () => ({
+    mutateAsync: mockCreateTodo,
+    isPending: false,
+  }),
+}));
+
+// Mock CustomDateTimePicker
+vi.mock("../CustomDateTimePicker", () => ({
+  default: ({ value, onChange, placeholder, id }: any) => (
+    <input
+      id={id}
+      data-testid="custom-datetime-picker"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      aria-label={placeholder}
+    />
+  ),
+}));
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
 
 describe("TodoInput", () => {
-  const defaultProps = {
-    value: "",
-    onChange: vi.fn(),
-    onAdd: vi.fn(),
-    onKeyDown: vi.fn(),
-    isLoading: false,
-  };
+  const mockOnError = vi.fn();
 
-  it("should render input and button", () => {
-    render(<TodoInput {...defaultProps} />);
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should render input field for one-time task", () => {
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
     expect(
-      screen.getByPlaceholderText("What needs to be done?")
+      screen.getByPlaceholderText("What task needs to be done?")
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /add/i })).toBeInTheDocument();
   });
 
-  it("should call onChange when input value changes", async () => {
-    const user = userEvent.setup();
-    const onChange = vi.fn();
-    render(<TodoInput {...defaultProps} onChange={onChange} />);
+  it("should render input field for daily task", () => {
+    render(<TodoInput taskType="daily" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
-    const input = screen.getByPlaceholderText("What needs to be done?");
-    await user.type(input, "Test todo");
-
-    // Check that onChange was called for each character
-    expect(onChange).toHaveBeenCalledTimes(9); // One call per character
-    // Check that the first and last characters were called correctly
-    expect(onChange).toHaveBeenNthCalledWith(1, "T");
-    expect(onChange).toHaveBeenNthCalledWith(9, "o"); // Last character is 'o'
+    expect(
+      screen.getByPlaceholderText("What habit needs to be done?")
+    ).toBeInTheDocument();
   });
 
-  it("should call onAdd when button is clicked", async () => {
-    const user = userEvent.setup();
-    const onAdd = vi.fn();
-    render(<TodoInput {...defaultProps} value="Test todo" onAdd={onAdd} />);
+  it("should render task type display", () => {
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
-    const button = screen.getByRole("button", { name: /add/i });
-    await user.click(button);
-
-    expect(onAdd).toHaveBeenCalled();
+    expect(screen.getByText("one-time")).toBeInTheDocument();
   });
 
-  it("should call onKeyDown when Enter is pressed", async () => {
-    const user = userEvent.setup();
-    const onKeyDown = vi.fn();
-    render(<TodoInput {...defaultProps} onKeyDown={onKeyDown} />);
+  it("should render due date input for one-time tasks", () => {
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
-    const input = screen.getByPlaceholderText("What needs to be done?");
-    await user.type(input, "Test todo{enter}");
-
-    expect(onKeyDown).toHaveBeenCalled();
+    expect(screen.getByTestId("custom-datetime-picker")).toBeInTheDocument();
   });
 
-  it("should disable button when loading", () => {
-    render(<TodoInput {...defaultProps} isLoading={true} />);
+  it("should not render due date input for daily tasks", () => {
+    render(<TodoInput taskType="daily" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
-    const button = screen.getByRole("button", { name: /add todo/i });
-    expect(button).toBeDisabled();
+    expect(
+      screen.queryByTestId("custom-datetime-picker")
+    ).not.toBeInTheDocument();
   });
 
-  it("should disable button when input is empty", () => {
-    render(<TodoInput {...defaultProps} value="" />);
+  it("should render add button", () => {
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
-    const button = screen.getByRole("button", { name: /add/i });
-    expect(button).toBeDisabled();
+    expect(screen.getByText("Add Task")).toBeInTheDocument();
   });
 
-  it("should enable button when input has value and not loading", () => {
-    render(<TodoInput {...defaultProps} value="Test todo" isLoading={false} />);
+  it("should call createTodo when form is submitted for one-time task", async () => {
+    mockCreateTodo.mockResolvedValue({});
 
-    const button = screen.getByRole("button", { name: /add/i });
-    expect(button).not.toBeDisabled();
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    const input = screen.getByPlaceholderText("What task needs to be done?");
+    const dueDateInput = screen.getByTestId("custom-datetime-picker");
+    const addButton = screen.getByText("Add Task");
+
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 1);
+    const dateString = futureDate.toISOString().slice(0, 16);
+
+    fireEvent.change(input, { target: { value: "Test task" } });
+    fireEvent.change(dueDateInput, { target: { value: dateString } });
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(mockCreateTodo).toHaveBeenCalledWith({
+        text: "Test task",
+        type: "one-time",
+        dueAt: dateString,
+      });
+    });
   });
 
-  it("should show loading text when loading", () => {
-    render(<TodoInput {...defaultProps} isLoading={true} />);
+  it("should call createTodo when form is submitted for daily task", async () => {
+    mockCreateTodo.mockResolvedValue({});
 
-    expect(screen.getByText("Adding...")).toBeInTheDocument();
+    render(<TodoInput taskType="daily" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    const input = screen.getByPlaceholderText("What habit needs to be done?");
+    const addButton = screen.getByText("Add Task");
+
+    fireEvent.change(input, { target: { value: "Test habit" } });
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(mockCreateTodo).toHaveBeenCalledWith({
+        text: "Test habit",
+        type: "daily",
+      });
+    });
   });
 
-  it("should show add text when not loading", () => {
-    render(<TodoInput {...defaultProps} isLoading={false} />);
+  it("should call onError when creation fails", async () => {
+    const error = new Error("Creation failed");
+    mockCreateTodo.mockRejectedValue(error);
 
-    expect(screen.getByText("Add")).toBeInTheDocument();
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    const input = screen.getByPlaceholderText("What task needs to be done?");
+    const dueDateInput = screen.getByTestId("custom-datetime-picker");
+    const addButton = screen.getByText("Add Task");
+
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 1);
+    const dateString = futureDate.toISOString().slice(0, 16);
+
+    fireEvent.change(input, { target: { value: "Test task" } });
+    fireEvent.change(dueDateInput, { target: { value: dateString } });
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(mockOnError).toHaveBeenCalledWith(error);
+    });
   });
 
-  it("should have proper accessibility attributes", () => {
-    render(<TodoInput {...defaultProps} />);
+  it("should clear input after successful creation", async () => {
+    mockCreateTodo.mockResolvedValue({});
 
-    const input = screen.getByPlaceholderText("What needs to be done?");
-    const button = screen.getByRole("button", { name: /add/i });
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
-    expect(input).toHaveAttribute("aria-label", "Add new todo");
-    expect(button).toHaveAttribute("aria-label", "Add todo");
+    const input = screen.getByPlaceholderText(
+      "What task needs to be done?"
+    ) as HTMLInputElement;
+    const dueDateInput = screen.getByLabelText(
+      "Due Date & Time"
+    ) as HTMLInputElement;
+    const addButton = screen.getByText("Add Task");
+
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 1);
+    const dateString = futureDate.toISOString().slice(0, 16);
+
+    fireEvent.change(input, { target: { value: "Test task" } });
+    fireEvent.change(dueDateInput, { target: { value: dateString } });
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(input.value).toBe("");
+      expect(dueDateInput.value).toBe("");
+    });
   });
 
-  it("should limit input to 500 characters", () => {
-    render(<TodoInput {...defaultProps} />);
+  it("should handle due date change", () => {
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
-    const input = screen.getByPlaceholderText("What needs to be done?");
-    expect(input).toHaveAttribute("maxLength", "500");
+    const dueDateInput = screen.getByLabelText(
+      "Due Date & Time"
+    ) as HTMLInputElement;
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 1);
+    const dateString = futureDate.toISOString().slice(0, 16);
+
+    fireEvent.change(dueDateInput, { target: { value: dateString } });
+
+    expect(dueDateInput.value).toBe(dateString);
+  });
+
+  it("should not submit empty task", () => {
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    const addButton = screen.getByText("Add Task");
+    fireEvent.click(addButton);
+
+    expect(mockCreateTodo).not.toHaveBeenCalled();
+  });
+
+  it("should not submit task with only whitespace", () => {
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    const input = screen.getByPlaceholderText("What task needs to be done?");
+    const addButton = screen.getByText("Add Task");
+
+    fireEvent.change(input, { target: { value: "   " } });
+    fireEvent.click(addButton);
+
+    expect(mockCreateTodo).not.toHaveBeenCalled();
+  });
+
+  it("should not submit one-time task without due date", () => {
+    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    const input = screen.getByPlaceholderText("What task needs to be done?");
+    const addButton = screen.getByText("Add Task");
+
+    fireEvent.change(input, { target: { value: "Test task" } });
+    fireEvent.click(addButton);
+
+    expect(mockCreateTodo).not.toHaveBeenCalled();
   });
 });
