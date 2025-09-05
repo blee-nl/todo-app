@@ -16,7 +16,7 @@ export const getDateButtonClasses = (day: {
   }
   
   if (day.isSelected) {
-    return cn(baseClasses, "bg-blue-500 text-white shadow-lg");
+    return cn(baseClasses, "bg-blue-600 text-white shadow-lg ring-2 ring-blue-200");
   }
   
   if (day.isToday) {

@@ -6,11 +6,7 @@ import ActiveTodoItem from "../ActiveTodoItem";
 import type { Todo } from "../../services/api";
 
 // Mock the TaskActions
-const mockHandleSave = vi.fn();
 const mockHandleCancel = vi.fn();
-const mockHandleComplete = vi.fn();
-const mockHandleFail = vi.fn();
-const mockHandleDelete = vi.fn();
 const mockHandleKeyDown = vi.fn();
 const mockUpdateTodo = vi.fn();
 const mockCompleteTodo = vi.fn();
@@ -18,11 +14,11 @@ const mockFailTodo = vi.fn();
 const mockDeleteTodo = vi.fn();
 
 vi.mock("../actions/TaskActions", () => ({
-  useActiveTodoActions: (todo: Todo, onError?: (error: Error) => void) => ({
+  useActiveTodoActions: (_todo: Todo, onError?: (error: Error) => void) => ({
     handleSave: async (
-      editText: string,
-      editDueAt: string,
-      setIsEditing: (editing: boolean) => void
+      _editText: string,
+      _editDueAt: string,
+      _setIsEditing: (editing: boolean) => void
     ) => {
       try {
         await mockUpdateTodo();

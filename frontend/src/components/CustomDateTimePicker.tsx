@@ -149,22 +149,37 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
 
       {/* Calendar Popup */}
       {isOpen && (
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-4 min-w-80">
-          <CalendarHeader
-            displayDate={displayDate}
-            onPreviousMonth={handlePreviousMonth}
-            onNextMonth={handleNextMonth}
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-25 z-40"
+            onClick={handleCancel}
           />
+          {/* Calendar Modal */}
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 p-6 min-w-96 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <CalendarHeader
+              displayDate={displayDate}
+              onPreviousMonth={handlePreviousMonth}
+              onNextMonth={handleNextMonth}
+            />
 
-          <CalendarGrid days={calendarDays} onDateSelect={handleDateSelect} />
+            <div className="mb-6">
+              <CalendarGrid
+                days={calendarDays}
+                onDateSelect={handleDateSelect}
+              />
+            </div>
 
-          <TimePicker
-            selectedTime={selectedTime}
-            onTimeChange={handleTimeChange}
-          />
+            <div className="mb-6">
+              <TimePicker
+                selectedTime={selectedTime}
+                onTimeChange={handleTimeChange}
+              />
+            </div>
 
-          <ActionButtons onConfirm={handleConfirm} onCancel={handleCancel} />
-        </div>
+            <ActionButtons onConfirm={handleConfirm} onCancel={handleCancel} />
+          </div>
+        </>
       )}
     </div>
   );

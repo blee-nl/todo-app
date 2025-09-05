@@ -7,7 +7,7 @@ import type { Todo } from "../../services/api";
 const mockHandleDeleteAll = vi.fn();
 
 vi.mock("../actions/TaskActions", () => ({
-  useTaskListActions: (state: string, onError?: (error: Error) => void) => ({
+  useTaskListActions: (_state: string, onError?: (error: Error) => void) => ({
     handleDeleteAll: async () => {
       try {
         await mockHandleDeleteAll();
