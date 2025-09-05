@@ -40,7 +40,7 @@ A modern, full-stack todo application built with React, TypeScript, Node.js, and
 - **Error Handling**: Comprehensive error management with user feedback
 - **Input Validation**: Client and server-side validation
 - **Rate Limiting**: API protection against abuse
-- **Testing**: 100% test coverage with Jest and React Testing Library (270 tests passing)
+- **Testing**: 70% test coverage with Jest and React Testing Library (270 tests passing)
 - **Responsive Design**: Mobile-first approach with desktop enhancements
 - **Custom CSS**: Tailwind CSS + custom styles for enhanced UI
 - **API Documentation**: Complete Swagger/OpenAPI documentation at `/api/docs`
@@ -50,20 +50,33 @@ A modern, full-stack todo application built with React, TypeScript, Node.js, and
 - **Custom Icons**: Optimized SVG icon system with size variants
 - **Performance Optimization**: Memoized components and efficient state management
 
-## 🖥️ Screenshots
+## 🖥️ Demo Screenshots
 
 ### Desktop View
-- Left sidebar with navigation and statistics
-- Main content area with task lists
-- Clean, organized layout with four task categories
-- Inline editing with smooth transitions
-- Timestamp display for all tasks
 
-### Mobile View
-- Top bar with current list title
-- Bottom tab navigation for easy switching
-- Floating action button for adding tasks
-- Touch-friendly interface optimized for one-handed use
+#### Main Dashboard
+![Main Dashboard](./demo/main.png)
+*Clean desktop interface with left sidebar navigation and main dashboard*
+
+#### Pending Tasks Page
+![Pending Tasks Page](./demo/pending-tasks-page.png)
+*Pending tasks list showing newly created tasks waiting to be activated*
+
+#### Active Tasks Page
+![Active Tasks Page](./demo/active-tasks-page-on-small-screen.png)
+*Active tasks view showing currently ongoing tasks with inline editing capabilities*
+
+#### Completed Tasks Page
+![Completed Tasks Page](./demo/completed-tasks-page.png)
+*Completed tasks list with reactivation options and bulk delete functionality*
+
+#### Failed Tasks Screen
+![Failed Tasks Screen](./demo/failed-tasks-screen.png)
+*Failed tasks view with reactivation and cleanup options*
+
+#### Task Creation Modal
+![Task Creation Modal](./demo/create-task.png)
+*Modern task creation modal with date/time picker and task type selection*
 
 ## 🚀 Quick Start
 
