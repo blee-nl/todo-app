@@ -13,7 +13,7 @@ import type { TaskType, TaskState } from "../services/api";
 
 const TodoApp: React.FC = () => {
   const { data: groupedTodos, isLoading, error } = useTodos();
-  const { handleError } = useErrorHandler();
+  const { handleError, currentError, clearError } = useErrorHandler();
   const [selectedTaskType, setSelectedTaskType] =
     useState<TaskType>("one-time");
   const [selectedState, setSelectedState] = useState<TaskState>("pending");
@@ -45,17 +45,24 @@ const TodoApp: React.FC = () => {
         onStateChange={setSelectedState}
         todos={todos}
       />
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col bg-white min-h-screen lg:min-h-0 lg:ml-64">
         <TopBar
           selectedState={selectedState}
           onAddTask={() => setIsTaskModalOpen(true)}
         />
-        <div className="flex-1 pt-16 pb-20 lg:pt-0 lg:pb-0">
-          <TaskList
-            todos={todos[selectedState]}
-            state={selectedState}
-            onError={handleError}
-          />
+        <div className="flex-1 pt-16 pb-20 lg:pt-0 lg:pb-0 bg-white overflow-hidden">
+          {currentError && (
+            <div className="p-4">
+              <ErrorDisplay error={currentError} onDismiss={clearError} />
+            </div>
+          )}
+          <div className="h-full overflow-y-auto">
+            <TaskList
+              todos={todos[selectedState]}
+              state={selectedState}
+              onError={handleError}
+            />
+          </div>
         </div>
       </div>
       <BottomTabBar
@@ -68,6 +75,8 @@ const TodoApp: React.FC = () => {
         onClose={() => setIsTaskModalOpen(false)}
         taskType={selectedTaskType}
         setTaskType={setSelectedTaskType}
+        onError={handleError}
+        onTaskCreated={() => setSelectedState("pending")}
       />
     </Layout>
   );

@@ -4,6 +4,7 @@ import PendingTodoItem from "./PendingTodoItem";
 import ActiveTodoItem from "./ActiveTodoItem";
 import CompletedTodoItem from "./CompletedTodoItem";
 import FailedTodoItem from "./FailedTodoItem";
+import { TaskIcon, SuccessIcon, ErrorIcon } from "../assets/icons";
 
 interface TodoListProps {
   todos: Todo[];
@@ -11,22 +12,33 @@ interface TodoListProps {
   onError?: (error: Error) => void;
 }
 
+const stateConfig = {
+  pending: {
+    icon: <TaskIcon size="lg" className="text-blue-500" />,
+    contextText: "No pending tasks",
+  },
+  active: {
+    icon: <TaskIcon size="lg" className="text-green-500" />,
+    contextText: "No active tasks",
+  },
+  completed: {
+    icon: <SuccessIcon size="lg" className="text-gray-500" />,
+    contextText: "No completed tasks",
+  },
+  failed: {
+    icon: <ErrorIcon size="lg" className="text-red-500" />,
+    contextText: "No failed tasks",
+  },
+};
+
 const TodoList: React.FC<TodoListProps> = ({ todos, state, onError }) => {
+  const taskState = stateConfig[state];
+
   if (todos.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        <div className="text-4xl mb-2">
-          {state === "pending" && "📋"}
-          {state === "active" && "⚡"}
-          {state === "completed" && "✅"}
-          {state === "failed" && "❌"}
-        </div>
-        <p className="text-sm">
-          {state === "pending" && "No pending tasks"}
-          {state === "active" && "No active tasks"}
-          {state === "completed" && "No completed tasks"}
-          {state === "failed" && "No failed tasks"}
-        </p>
+        <div className="mb-2">{taskState.icon}</div>
+        <p className="text-sm">{taskState.contextText}</p>
       </div>
     );
   }
@@ -37,21 +49,11 @@ const TodoList: React.FC<TodoListProps> = ({ todos, state, onError }) => {
         switch (state) {
           case "pending":
             return (
-              <PendingTodoItem
-                key={todo.id}
-                todo={todo}
-                onError={onError}
-                isMobile={false}
-              />
+              <PendingTodoItem key={todo.id} todo={todo} onError={onError} />
             );
           case "active":
             return (
-              <ActiveTodoItem
-                key={todo.id}
-                todo={todo}
-                onError={onError}
-                isMobile={false}
-              />
+              <ActiveTodoItem key={todo.id} todo={todo} onError={onError} />
             );
           case "completed":
             return (

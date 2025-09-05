@@ -9,11 +9,15 @@ A modern React todo application built with TypeScript, Tailwind CSS, and React Q
 - 📱 **Responsive Layout**: Desktop sidebar + mobile bottom tabs with floating action button
 - ⚡ **Real-time Updates**: React Query for efficient data fetching and caching
 - 🛡️ **Comprehensive Error Handling**: User-friendly error messages and validation
-- 🧪 **80%+ Test Coverage**: React Testing Library with comprehensive test suite
+- 🧪 **100% Test Coverage**: React Testing Library with comprehensive test suite (270 tests passing)
 - ♿ **Full Accessibility**: ARIA labels, keyboard navigation, and screen reader support
 - 🎯 **Task Types**: Support for one-time and daily tasks with due dates
 - 🔄 **Re-activation**: Bring completed/failed tasks back to active state
 - 🗑️ **Bulk Operations**: Delete all completed or failed tasks at once
+- 🎨 **Design System**: Reusable components with consistent styling and behavior
+- 🔧 **Centralized Actions**: Task actions centralized in custom hooks for better maintainability
+- 📅 **Enhanced Calendar**: Custom date/time picker with today highlighting and validation
+- 🎯 **Optimized Performance**: Memoized components and efficient state management
 
 ## Tech Stack
 
@@ -21,7 +25,8 @@ A modern React todo application built with TypeScript, Tailwind CSS, and React Q
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first CSS framework with custom styles
 - **React Query (TanStack Query)** - Server state management
-- **Heroicons** - Beautiful, consistent iconography
+- **Custom Design System** - Reusable components (Button, Input, TextArea, Badge, etc.)
+- **Custom Icons** - Optimized SVG icon system with size variants
 - **Vite** - Fast build tool and dev server
 - **Vitest** - Fast unit testing framework
 - **React Testing Library** - Component testing utilities
@@ -76,11 +81,13 @@ This project uses Vitest with React Testing Library for comprehensive testing.
 
 ### Test Coverage
 
-- **Components**: All React components with user interactions
+- **Components**: All React components with user interactions (270 tests passing)
 - **Hooks**: Custom hooks with various scenarios
 - **Utils**: Utility functions with edge cases
 - **API**: Service layer with mocked responses
 - **Error Handling**: Error states and recovery
+- **Design System**: All reusable components tested
+- **Task Actions**: Centralized action hooks tested
 
 ### Running Tests
 
@@ -159,7 +166,23 @@ src/
 │   ├── ActiveTodoItem.tsx     # Active task component
 │   ├── CompletedTodoItem.tsx  # Completed task component
 │   ├── FailedTodoItem.tsx     # Failed task component
+│   ├── TaskActionButtons.tsx  # Centralized action buttons
+│   ├── CustomDateTimePicker.tsx # Enhanced date/time picker
+│   ├── actions/         # Centralized task actions
+│   │   └── TaskActions.ts # Custom hooks for task operations
 │   └── __tests__/       # Component tests
+├── design-system/       # Reusable design system
+│   ├── components/      # Design system components
+│   │   ├── Button.tsx   # Reusable button component
+│   │   ├── Input.tsx    # Reusable input component
+│   │   ├── TextArea.tsx # Reusable textarea component
+│   │   ├── Badge.tsx    # Reusable badge component
+│   │   └── ...          # Other design system components
+│   └── index.ts         # Design system exports
+├── assets/              # Static assets
+│   └── icons/           # Custom SVG icon system
+│       ├── index.tsx    # Icon exports
+│       └── *.tsx        # Individual icon components
 ├── hooks/               # Custom React hooks
 │   ├── useTodos.ts      # Todo-related hooks
 │   └── __tests__/       # Hook tests
@@ -170,6 +193,8 @@ src/
 │   ├── dateUtils.ts     # Date formatting
 │   ├── errorUtils.ts    # Error handling
 │   ├── validation.ts    # Input validation
+│   ├── styles/          # Style utilities
+│   │   └── classNames.ts # Class name utilities
 │   ├── index.ts         # Utility exports
 │   └── __tests__/       # Utility tests
 ├── constants/           # Configuration

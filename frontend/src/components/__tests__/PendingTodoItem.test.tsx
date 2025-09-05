@@ -5,18 +5,48 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PendingTodoItem from "../PendingTodoItem";
 import type { Todo } from "../../services/api";
 
-// Mock the hooks
+// Mock the TaskActions
+const mockHandleActivate = vi.fn();
+const mockHandleDelete = vi.fn();
+const mockHandleSave = vi.fn();
+const mockHandleCancel = vi.fn();
+const mockHandleKeyDown = vi.fn();
 const mockActivateTodo = vi.fn();
 const mockDeleteTodo = vi.fn();
+const mockUpdateTodo = vi.fn();
 
-vi.mock("../../hooks/useTodos", () => ({
-  useActivateTodo: () => ({
-    mutateAsync: mockActivateTodo,
-    isPending: false,
-  }),
-  useDeleteTodo: () => ({
-    mutateAsync: mockDeleteTodo,
-    isPending: false,
+vi.mock("../actions/TaskActions", () => ({
+  usePendingTodoActions: (todo: Todo, onError?: (error: Error) => void) => ({
+    handleActivate: async () => {
+      try {
+        await mockActivateTodo();
+      } catch (error) {
+        onError?.(error as Error);
+      }
+    },
+    handleDelete: async () => {
+      try {
+        await mockDeleteTodo();
+      } catch (error) {
+        onError?.(error as Error);
+      }
+    },
+    handleSave: async (
+      editText: string,
+      editDueAt: string,
+      setIsEditing: (editing: boolean) => void
+    ) => {
+      try {
+        await mockUpdateTodo();
+      } catch (error) {
+        onError?.(error as Error);
+      }
+    },
+    handleCancel: mockHandleCancel,
+    handleKeyDown: mockHandleKeyDown,
+    activateTodo: { mutateAsync: mockActivateTodo, isPending: false },
+    deleteTodo: { mutateAsync: mockDeleteTodo, isPending: false },
+    updateTodo: { mutateAsync: mockUpdateTodo, isPending: false },
   }),
 }));
 
@@ -47,6 +77,9 @@ describe("PendingTodoItem", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockActivateTodo.mockResolvedValue({ id: "1" });
+    mockDeleteTodo.mockResolvedValue({ id: "1" });
+    mockUpdateTodo.mockResolvedValue({ id: "1" });
   });
 
   it("should render todo text", () => {
@@ -98,8 +131,6 @@ describe("PendingTodoItem", () => {
   });
 
   it("should call activateTodo when activate button is clicked", async () => {
-    mockActivateTodo.mockResolvedValue({});
-
     render(<PendingTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
@@ -108,13 +139,11 @@ describe("PendingTodoItem", () => {
     fireEvent.click(activateButton);
 
     await waitFor(() => {
-      expect(mockActivateTodo).toHaveBeenCalledWith("1");
+      expect(mockActivateTodo).toHaveBeenCalledTimes(1);
     });
   });
 
   it("should call deleteTodo when delete button is clicked", async () => {
-    mockDeleteTodo.mockResolvedValue({});
-
     render(<PendingTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
@@ -123,7 +152,7 @@ describe("PendingTodoItem", () => {
     fireEvent.click(deleteButton);
 
     await waitFor(() => {
-      expect(mockDeleteTodo).toHaveBeenCalledWith("1");
+      expect(mockDeleteTodo).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -137,6 +166,10 @@ describe("PendingTodoItem", () => {
 
     const activateButton = screen.getByText("Activate");
     fireEvent.click(activateButton);
+
+    await waitFor(() => {
+      expect(mockActivateTodo).toHaveBeenCalledTimes(1);
+    });
 
     await waitFor(() => {
       expect(mockOnError).toHaveBeenCalledWith(error);
@@ -153,6 +186,10 @@ describe("PendingTodoItem", () => {
 
     const deleteButton = screen.getByText("Delete");
     fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(mockDeleteTodo).toHaveBeenCalledTimes(1);
+    });
 
     await waitFor(() => {
       expect(mockOnError).toHaveBeenCalledWith(error);
@@ -173,26 +210,111 @@ describe("PendingTodoItem", () => {
   });
 
   it("should handle mobile layout", () => {
-    render(
-      <PendingTodoItem todo={mockTodo} onError={mockOnError} isMobile={true} />,
-      { wrapper: createWrapper() }
-    );
+    render(<PendingTodoItem todo={mockTodo} onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
     const buttonContainer = screen.getByText("Activate").closest("div");
-    expect(buttonContainer).toHaveClass("flex-row", "space-x-2");
+    expect(buttonContainer).toHaveClass(
+      "flex",
+      "flex-col",
+      "space-y-2",
+      "ml-4"
+    );
   });
 
   it("should handle desktop layout", () => {
-    render(
-      <PendingTodoItem
-        todo={mockTodo}
-        onError={mockOnError}
-        isMobile={false}
-      />,
-      { wrapper: createWrapper() }
-    );
+    render(<PendingTodoItem todo={mockTodo} onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
 
     const buttonContainer = screen.getByText("Activate").closest("div");
     expect(buttonContainer).toHaveClass("flex-col", "space-y-2");
+  });
+
+  it("should enter edit mode when text is clicked", () => {
+    render(<PendingTodoItem todo={mockTodo} onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    const textElement = screen.getByText("Test pending todo");
+    fireEvent.click(textElement);
+
+    expect(screen.getByDisplayValue("Test pending todo")).toBeInTheDocument();
+    expect(screen.getByText("Save")).toBeInTheDocument();
+    expect(screen.getByText("Cancel")).toBeInTheDocument();
+  });
+
+  it("should save changes when save button is clicked", async () => {
+    render(<PendingTodoItem todo={mockTodo} onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    // Enter edit mode
+    const textElement = screen.getByText("Test pending todo");
+    fireEvent.click(textElement);
+
+    // Change text
+    const input = screen.getByDisplayValue("Test pending todo");
+    fireEvent.change(input, { target: { value: "Updated text" } });
+
+    // Save
+    const saveButton = screen.getByText("Save");
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(mockUpdateTodo).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("should cancel changes when cancel button is clicked", async () => {
+    render(<PendingTodoItem todo={mockTodo} onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    // Enter edit mode
+    const textElement = screen.getByText("Test pending todo");
+    fireEvent.click(textElement);
+
+    // Change text
+    const input = screen.getByDisplayValue("Test pending todo");
+    fireEvent.change(input, { target: { value: "Updated text" } });
+
+    // Cancel
+    const cancelButton = screen.getByText("Cancel");
+    fireEvent.click(cancelButton);
+
+    await waitFor(() => {
+      expect(mockHandleCancel).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("should call onError when update fails", async () => {
+    const error = new Error("Update failed");
+    mockUpdateTodo.mockRejectedValue(error);
+
+    render(<PendingTodoItem todo={mockTodo} onError={mockOnError} />, {
+      wrapper: createWrapper(),
+    });
+
+    // Enter edit mode
+    const textElement = screen.getByText("Test pending todo");
+    fireEvent.click(textElement);
+
+    // Change text
+    const input = screen.getByDisplayValue("Test pending todo");
+    fireEvent.change(input, { target: { value: "Updated text" } });
+
+    // Save
+    const saveButton = screen.getByText("Save");
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(mockUpdateTodo).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(mockOnError).toHaveBeenCalledWith(error);
+    });
   });
 });

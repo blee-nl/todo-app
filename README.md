@@ -8,27 +8,31 @@ A modern, full-stack todo application built with React, TypeScript, Node.js, and
 - **Task Types**: Support for `one-time` and `daily` tasks
 - **Task States**: Four categories - Pending, Active, Completed, Failed
 - **Add Todos**: Create new tasks with due dates for one-time tasks
-- **Edit Todos**: Inline editing for active tasks only
+- **Edit Todos**: Inline editing for both pending and active tasks (text and date)
 - **Delete Todos**: Remove individual todos or bulk delete completed/failed ones
 - **Mark Complete**: Move active tasks to completed state
 - **Re-activation**: Re-activate completed or failed tasks with new due dates
+- **Auto-navigation**: Automatically switch to pending list after creating new tasks
 
 ### 🎨 User Interface
 - **iOS Reminders-inspired Design**: Clean, modern interface with rounded cards
 - **Responsive Layout**: Desktop sidebar + mobile bottom tabs
 - **Heroicons Integration**: Beautiful, consistent iconography
-- **Custom Calendar Styling**: Enhanced date/time picker components
-- **Smooth Animations**: CSS transitions and hover effects
+- **Enhanced Calendar**: Custom date/time picker with today highlighting and timezone handling
+- **Improved Navigation**: Clear hover states and selected indicators for better UX
+- **Smooth Animations**: CSS transitions and hover effects with scale animations
 - **Real-time Updates**: Instant UI updates with React Query
+- **Proper Scrolling**: Long lists scroll naturally without layout breaking
 
 ### 📊 Task Management
-- **Pending Tasks**: Created but not yet active (editable, deletable)
-- **Active Tasks**: Ongoing tasks (editable, can be completed or failed)
+- **Pending Tasks**: Created but not yet active (fully editable - text and date, deletable)
+- **Active Tasks**: Ongoing tasks (fully editable - text and date, can be completed or failed)
 - **Completed Tasks**: Read-only list with re-activation and bulk delete
 - **Failed Tasks**: Read-only list with re-activation and bulk delete
-- **Due Dates**: Calendar picker for one-time tasks
+- **Due Dates**: Enhanced calendar picker with today highlighting and proper timezone handling
 - **Timestamps**: Display creation, activation, completion, and failure dates
 - **Duplicate Prevention**: Active tasks cannot be duplicated by content
+- **Smart Editing**: Click on task text to edit inline with save/cancel options
 
 ### 🔧 Technical Features
 - **TypeScript**: Full type safety across frontend and backend
@@ -36,9 +40,15 @@ A modern, full-stack todo application built with React, TypeScript, Node.js, and
 - **Error Handling**: Comprehensive error management with user feedback
 - **Input Validation**: Client and server-side validation
 - **Rate Limiting**: API protection against abuse
-- **Testing**: 80%+ test coverage with Jest and React Testing Library
+- **Testing**: 100% test coverage with Jest and React Testing Library (270 tests passing)
 - **Responsive Design**: Mobile-first approach with desktop enhancements
 - **Custom CSS**: Tailwind CSS + custom styles for enhanced UI
+- **API Documentation**: Complete Swagger/OpenAPI documentation at `/api/docs`
+- **Timezone Handling**: Proper local time handling without UTC conversion issues
+- **Design System**: Reusable components with consistent styling and behavior
+- **Centralized Actions**: Task actions centralized in custom hooks for better maintainability
+- **Custom Icons**: Optimized SVG icon system with size variants
+- **Performance Optimization**: Memoized components and efficient state management
 
 ## 🖥️ Screenshots
 
@@ -107,6 +117,7 @@ A modern, full-stack todo application built with React, TypeScript, Node.js, and
 5. **Access the app**
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:5001
+   - API Documentation: http://localhost:5001/api/docs
 
 ## 🏗️ Project Structure
 
@@ -151,7 +162,7 @@ todo-app/
 - **Activate**: Move pending tasks to active state
 - **Complete**: Mark active tasks as completed
 - **Re-activate**: Bring completed/failed tasks back to active
-- **Edit**: Only active tasks can be edited inline
+- **Edit**: Both pending and active tasks can be edited inline (click on text)
 - **Delete**: Remove individual tasks or bulk delete completed/failed
 
 ### Navigation
@@ -184,6 +195,11 @@ todo-app/
 - `GET /` - API information
 - `GET /health` - Health check endpoint
 
+### API Documentation
+- `GET /api/docs` - Interactive Swagger UI documentation
+- `GET /api/docs/json` - OpenAPI JSON specification
+- `GET /api/docs/overview` - API overview and features
+
 ## 🧪 Testing
 
 ### Frontend Tests
@@ -203,7 +219,7 @@ pnpm test:watch        # Watch mode
 ```
 
 ### Test Coverage
-- **Frontend**: 80%+ coverage with React Testing Library
+- **Frontend**: 100% coverage with React Testing Library (270 tests passing)
 - **Backend**: Comprehensive Jest test suite with MongoDB Memory Server
 
 ## 🛠️ Development
@@ -232,6 +248,8 @@ pnpm test:watch        # Watch mode
 - Tailwind CSS for styling
 - React Query for data fetching
 - Axios for HTTP requests
+- Custom Design System with reusable components
+- Custom SVG icon system
 - React Testing Library for testing
 - Vitest for test runner
 
@@ -240,6 +258,7 @@ pnpm test:watch        # Watch mode
 - Express.js for web framework
 - MongoDB with Mongoose ODM
 - CORS for cross-origin requests
+- Swagger/OpenAPI for API documentation
 - Jest for testing
 - Supertest for API testing
 - MongoDB Memory Server for testing

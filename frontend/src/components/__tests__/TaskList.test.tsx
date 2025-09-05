@@ -1,20 +1,21 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import TaskList from "../TaskList";
 import type { Todo } from "../../services/api";
 
-// Mock the hooks
-const mockDeleteCompletedTodos = vi.fn();
-const mockDeleteFailedTodos = vi.fn();
+// Mock the TaskActions
+const mockHandleDeleteAll = vi.fn();
 
-vi.mock("../../hooks/useTodos", () => ({
-  useDeleteCompletedTodos: () => ({
-    mutateAsync: mockDeleteCompletedTodos,
-    isPending: false,
-  }),
-  useDeleteFailedTodos: () => ({
-    mutateAsync: mockDeleteFailedTodos,
-    isPending: false,
+vi.mock("../actions/TaskActions", () => ({
+  useTaskListActions: (state: string, onError?: (error: Error) => void) => ({
+    handleDeleteAll: async () => {
+      try {
+        await mockHandleDeleteAll();
+      } catch (error) {
+        onError?.(error as Error);
+      }
+    },
+    isDeleteAllLoading: false,
   }),
 }));
 
@@ -69,14 +70,15 @@ describe("TaskList", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockDeleteCompletedTodos.mockResolvedValue({ deletedCount: 1 });
-    mockDeleteFailedTodos.mockResolvedValue({ deletedCount: 1 });
+    mockHandleDeleteAll.mockResolvedValue(undefined);
   });
 
   it("should render empty state for pending tasks", () => {
     render(<TaskList todos={[]} state="pending" onError={mockOnError} />);
 
-    expect(screen.getByText("📋")).toBeInTheDocument();
+    // Check for SVG icon instead of emoji - look for the SVG element directly
+    const svgIcon = document.querySelector('svg[aria-hidden="true"]');
+    expect(svgIcon).toBeInTheDocument();
     expect(screen.getByText("No pending tasks")).toBeInTheDocument();
     expect(
       screen.getByText("Create a new task to get started")
@@ -86,7 +88,9 @@ describe("TaskList", () => {
   it("should render empty state for active tasks", () => {
     render(<TaskList todos={[]} state="active" onError={mockOnError} />);
 
-    expect(screen.getByText("⚡")).toBeInTheDocument();
+    // Check for SVG icon instead of emoji
+    const svgIcon = document.querySelector('svg[aria-hidden="true"]');
+    expect(svgIcon).toBeInTheDocument();
     expect(screen.getByText("No active tasks")).toBeInTheDocument();
     expect(
       screen.getByText("Activate a pending task to begin working")
@@ -96,7 +100,9 @@ describe("TaskList", () => {
   it("should render empty state for completed tasks", () => {
     render(<TaskList todos={[]} state="completed" onError={mockOnError} />);
 
-    expect(screen.getByText("✅")).toBeInTheDocument();
+    // Check for SVG icon instead of emoji
+    const svgIcon = document.querySelector('svg[aria-hidden="true"]');
+    expect(svgIcon).toBeInTheDocument();
     expect(screen.getByText("No completed tasks")).toBeInTheDocument();
     expect(
       screen.getByText("Complete some tasks to see them here")
@@ -106,7 +112,9 @@ describe("TaskList", () => {
   it("should render empty state for failed tasks", () => {
     render(<TaskList todos={[]} state="failed" onError={mockOnError} />);
 
-    expect(screen.getByText("❌")).toBeInTheDocument();
+    // Check for SVG icon instead of emoji
+    const svgIcon = document.querySelector('svg[aria-hidden="true"]');
+    expect(svgIcon).toBeInTheDocument();
     expect(screen.getByText("No failed tasks")).toBeInTheDocument();
     expect(
       screen.getByText("Tasks that weren't completed will appear here")
@@ -280,7 +288,7 @@ describe("TaskList", () => {
     fireEvent.click(deleteAllButton);
 
     await waitFor(() => {
-      expect(mockDeleteCompletedTodos).toHaveBeenCalledTimes(1);
+      expect(mockHandleDeleteAll).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -304,7 +312,7 @@ describe("TaskList", () => {
     fireEvent.click(deleteAllButton);
 
     await waitFor(() => {
-      expect(mockDeleteFailedTodos).toHaveBeenCalledTimes(1);
+      expect(mockHandleDeleteAll).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -321,7 +329,7 @@ describe("TaskList", () => {
     };
 
     const error = new Error("Delete failed");
-    mockDeleteCompletedTodos.mockRejectedValue(error);
+    mockHandleDeleteAll.mockRejectedValue(error);
 
     render(
       <TaskList
@@ -333,6 +341,10 @@ describe("TaskList", () => {
 
     const deleteAllButton = screen.getByText("Delete All Completed");
     fireEvent.click(deleteAllButton);
+
+    await waitFor(() => {
+      expect(mockHandleDeleteAll).toHaveBeenCalledTimes(1);
+    });
 
     await waitFor(() => {
       expect(mockOnError).toHaveBeenCalledWith(error);
@@ -352,7 +364,7 @@ describe("TaskList", () => {
     };
 
     const error = new Error("Delete failed");
-    mockDeleteFailedTodos.mockRejectedValue(error);
+    mockHandleDeleteAll.mockRejectedValue(error);
 
     render(
       <TaskList todos={[failedTodo]} state="failed" onError={mockOnError} />
@@ -360,6 +372,10 @@ describe("TaskList", () => {
 
     const deleteAllButton = screen.getByText("Delete All Failed");
     fireEvent.click(deleteAllButton);
+
+    await waitFor(() => {
+      expect(mockHandleDeleteAll).toHaveBeenCalledTimes(1);
+    });
 
     await waitFor(() => {
       expect(mockOnError).toHaveBeenCalledWith(error);

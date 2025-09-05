@@ -123,7 +123,19 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
     };
     
     if (type === 'one-time' && dueAt) {
-      todoData.dueAt = new Date(dueAt);
+      const dueDate = new Date(dueAt);
+      if (isNaN(dueDate.getTime())) {
+        throw new TodoError('Invalid due date format', 400);
+      }
+      
+      // Check if due date is at least 10 minutes from now
+      const now = new Date();
+      const tenMinutesFromNow = new Date(now.getTime() + 10 * 60 * 1000);
+      if (dueDate < tenMinutesFromNow) {
+        throw new TodoError('Due date must be at least 10 minutes from now', 400);
+      }
+      
+      todoData.dueAt = dueDate;
     }
     
     // Check for duplicate active tasks with the same content
@@ -158,7 +170,7 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
 export const updateTodo = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { text } = req.body;
+    const { text, dueAt } = req.body;
     
     if (!id) {
       throw new TodoError('Todo ID is required', 400);
@@ -170,9 +182,9 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       throw new TodoError('Todo not found', 404);
     }
     
-    // Only allow editing text for active tasks
-    if (todo.state !== 'active') {
-      throw new TodoError('Only active tasks can be edited', 400);
+    // Allow editing for both pending and active tasks
+    if (!['pending', 'active'].includes(todo.state)) {
+      throw new TodoError('Only pending and active tasks can be edited', 400);
     }
     
     if (!text || text.trim().length === 0) {
@@ -184,6 +196,24 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
     }
     
     todo.text = text.trim();
+    
+    // Update dueAt if provided and task is one-time
+    if (dueAt && todo.type === 'one-time') {
+      const dueDate = new Date(dueAt);
+      if (isNaN(dueDate.getTime())) {
+        throw new TodoError('Invalid due date format', 400);
+      }
+      
+      // Check if due date is at least 10 minutes from now
+      const now = new Date();
+      const tenMinutesFromNow = new Date(now.getTime() + 10 * 60 * 1000);
+      if (dueDate < tenMinutesFromNow) {
+        throw new TodoError('Due date must be at least 10 minutes from now', 400);
+      }
+      
+      todo.dueAt = dueDate;
+    }
+    
     const updatedTodo = await todo.save();
     
     res.status(200).json({
