@@ -50,13 +50,13 @@ const TodoApp: React.FC = () => {
           selectedState={selectedState}
           onAddTask={() => setIsTaskModalOpen(true)}
         />
-        <div className="flex-1 pt-16 pb-20 lg:pt-0 lg:pb-0 bg-white overflow-hidden">
+        <div className="flex-1 pt-16 pb-20 lg:pt-0 lg:pb-0 bg-white flex flex-col">
           {currentError && (
-            <div className="p-4">
+            <div className="p-4 flex-shrink-0">
               <ErrorDisplay error={currentError} onDismiss={clearError} />
             </div>
           )}
-          <div className="h-full overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             <TaskList
               todos={todos[selectedState]}
               state={selectedState}
