@@ -1,13 +1,14 @@
 import React from "react";
-import { 
-  ClipboardDocumentListIcon, 
-  BoltIcon, 
-  CheckCircleIcon, 
+import {
+  ClipboardDocumentListIcon,
+  BoltIcon,
+  CheckCircleIcon,
   XCircleIcon,
   ChartBarIcon,
-  ClockIcon
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 import type { TaskState, GroupedTodos } from "../services/api";
+import { Text, Heading, Button } from "../design-system";
 
 interface SidebarProps {
   selectedState: TaskState;
@@ -15,46 +16,46 @@ interface SidebarProps {
   todos: GroupedTodos;
 }
 
+const navigationItems = [
+  {
+    state: "pending" as TaskState,
+    label: "Pending",
+    icon: ClipboardDocumentListIcon,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    activeBgColor: "bg-blue-100",
+  },
+  {
+    state: "active" as TaskState,
+    label: "Active",
+    icon: BoltIcon,
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+    activeBgColor: "bg-green-100",
+  },
+  {
+    state: "completed" as TaskState,
+    label: "Completed",
+    icon: CheckCircleIcon,
+    color: "text-gray-600",
+    bgColor: "bg-gray-50",
+    activeBgColor: "bg-gray-100",
+  },
+  {
+    state: "failed" as TaskState,
+    label: "Failed",
+    icon: XCircleIcon,
+    color: "text-red-600",
+    bgColor: "bg-red-50",
+    activeBgColor: "bg-red-100",
+  },
+];
+
 const Sidebar: React.FC<SidebarProps> = ({
   selectedState,
   onStateChange,
   todos,
 }) => {
-  const navigationItems = [
-    {
-      state: "pending" as TaskState,
-      label: "Pending",
-      icon: ClipboardDocumentListIcon,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      activeBgColor: "bg-blue-100",
-    },
-    {
-      state: "active" as TaskState,
-      label: "Active",
-      icon: BoltIcon,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      activeBgColor: "bg-green-100",
-    },
-    {
-      state: "completed" as TaskState,
-      label: "Completed",
-      icon: CheckCircleIcon,
-      color: "text-gray-600",
-      bgColor: "bg-gray-50",
-      activeBgColor: "bg-gray-100",
-    },
-    {
-      state: "failed" as TaskState,
-      label: "Failed",
-      icon: XCircleIcon,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
-      activeBgColor: "bg-red-100",
-    },
-  ];
-
   const totalCount =
     todos.pending.length +
     todos.active.length +
@@ -62,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     todos.failed.length;
 
   return (
-    <div className="hidden lg:flex lg:w-64 bg-white border-r border-gray-200 flex-col">
+    <div className="hidden lg:flex lg:w-64 bg-white border-r border-gray-200 flex-col fixed left-0 top-0 h-screen z-20">
       {/* App Logo/Name */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -70,8 +71,10 @@ const Sidebar: React.FC<SidebarProps> = ({
             <span className="text-white font-bold text-sm">T</span>
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">TodoApp</h1>
-            <p className="text-sm text-gray-500">{totalCount} tasks</p>
+            <Heading level={2}>TodoApp</Heading>
+            <Text variant="muted" className="text-sm">
+              {totalCount} tasks
+            </Text>
           </div>
         </div>
       </div>
@@ -80,13 +83,14 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-1 p-4">
         <nav className="space-y-2">
           {navigationItems.map((item) => (
-            <button
+            <Button
               key={item.state}
               onClick={() => onStateChange(item.state)}
+              variant="ghost"
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 ${
                 selectedState === item.state
-                  ? `${item.activeBgColor} ${item.color} shadow-sm`
-                  : `${item.bgColor} text-gray-600 hover:${item.activeBgColor}`
+                  ? `${item.activeBgColor} ${item.color} shadow-md border-2 border-current`
+                  : `${item.bgColor} text-gray-600 hover:${item.activeBgColor} hover:shadow-sm hover:scale-105`
               }`}
             >
               <div className="flex items-center space-x-3">
@@ -102,7 +106,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               >
                 {todos[item.state].length}
               </span>
-            </button>
+            </Button>
           ))}
         </nav>
       </div>

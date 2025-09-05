@@ -18,7 +18,8 @@ describe("CustomDateTimePicker", () => {
       />
     );
 
-    expect(screen.getByText("Select date and time")).toBeInTheDocument();
+    // Check for the aria-label instead of the text content
+    expect(screen.getByLabelText("Select date and time")).toBeInTheDocument();
   });
 
   it("should render with calendar and clock icons", () => {
@@ -115,7 +116,7 @@ describe("CustomDateTimePicker", () => {
         (button) =>
           button.textContent &&
           /^\d+$/.test(button.textContent) &&
-          !button.disabled
+          !(button as HTMLButtonElement).disabled
       );
     const firstEnabledDateButton = dateButtons[0];
     fireEvent.click(firstEnabledDateButton);

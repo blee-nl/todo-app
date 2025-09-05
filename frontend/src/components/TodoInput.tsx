@@ -2,6 +2,8 @@ import React, { useState, useCallback } from "react";
 import { useCreateTodo } from "../hooks/useTodos";
 import type { TaskType } from "../services/api";
 import CustomDateTimePicker from "./CustomDateTimePicker";
+import { Button, Input, Label, Text } from "../design-system";
+import { PlusIcon } from "../assets/icons";
 
 interface TodoInputProps {
   taskType: TaskType;
@@ -63,14 +65,16 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
     <div className="bg-white rounded-2xl shadow-lg p-6">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <Label className="mb-2">
             Task Type:{" "}
-            <span className="font-semibold capitalize">{taskType}</span>
-          </label>
+            <Text weight="semibold" className="capitalize">
+              {taskType}
+            </Text>
+          </Label>
         </div>
 
         <div>
-          <input
+          <Input
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -78,23 +82,21 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
             placeholder={`What ${
               taskType === "one-time" ? "task" : "habit"
             } needs to be done?`}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             disabled={isLoading}
             maxLength={500}
           />
-          <div className="text-right text-sm text-gray-500 mt-1">
-            {text.length}/500
+          <div className="text-right mt-1">
+            <Text variant="muted" className="text-sm">
+              {text.length}/500
+            </Text>
           </div>
         </div>
 
         {taskType === "one-time" && (
           <div>
-            <label
-              htmlFor="due-date"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
+            <Label htmlFor="due-date" className="mb-2">
               Due Date & Time
-            </label>
+            </Label>
             <CustomDateTimePicker
               id="due-date"
               value={dueAt}
@@ -107,31 +109,24 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
         )}
 
         <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500">
+          <Text variant="muted" className="text-sm">
             {taskType === "one-time"
               ? "One-time tasks have a specific deadline"
               : "Daily tasks repeat every day at midnight"}
-          </div>
+          </Text>
 
-          <button
+          <Button
             type="submit"
             disabled={
               isLoading || !text.trim() || (taskType === "one-time" && !dueAt)
             }
-            className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2"
+            variant="primary"
+            size="md"
+            isLoading={isLoading}
+            leftIcon={<PlusIcon size="sm" />}
           >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Adding...</span>
-              </>
-            ) : (
-              <>
-                <span>+</span>
-                <span>Add Task</span>
-              </>
-            )}
-          </button>
+            {isLoading ? "Adding..." : "Add Task"}
+          </Button>
         </div>
       </form>
     </div>

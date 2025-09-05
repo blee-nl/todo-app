@@ -22,7 +22,13 @@ describe("Layout", () => {
     );
 
     const layoutElement = container.firstChild as HTMLElement;
-    expect(layoutElement).toHaveClass("h-screen", "flex", "bg-gray-50");
+    expect(layoutElement).toHaveClass(
+      "min-h-screen",
+      "flex",
+      "flex-col",
+      "lg:flex-row",
+      "bg-gray-50"
+    );
   });
 
   it("should render multiple children", () => {

@@ -16,7 +16,7 @@ vi.mock("../../hooks/useTodos", () => ({
 
 // Mock CustomDateTimePicker
 vi.mock("../CustomDateTimePicker", () => ({
-  default: ({ value, onChange, placeholder, id }: any) => (
+  default: ({ value, onChange, placeholder, id }: { value: string; onChange: (value: string) => void; placeholder?: string; id?: string }) => (
     <input
       id={id}
       data-testid="custom-datetime-picker"

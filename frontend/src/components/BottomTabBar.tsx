@@ -46,10 +46,10 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
           <button
             key={tab.state}
             onClick={() => onStateChange(tab.state)}
-            className={`flex flex-col items-center py-2 px-3 rounded-xl transition-colors duration-200 ${
+            className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${
               selectedState === tab.state
-                ? "text-blue-600 bg-blue-50"
-                : "text-gray-500 hover:text-gray-700"
+                ? "text-blue-600 bg-blue-50 shadow-md scale-105"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:scale-105"
             }`}
           >
             <tab.icon className="w-5 h-5" />

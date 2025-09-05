@@ -4,11 +4,10 @@ import PendingTodoItem from "./PendingTodoItem";
 import ActiveTodoItem from "./ActiveTodoItem";
 import CompletedTodoItem from "./CompletedTodoItem";
 import FailedTodoItem from "./FailedTodoItem";
-import {
-  useDeleteCompletedTodos,
-  useDeleteFailedTodos,
-} from "../hooks/useTodos";
-import { TrashIcon } from "@heroicons/react/24/outline";
+import { useTaskListActions } from "./actions/TaskActions";
+import { Label } from "../design-system";
+import { TaskIcon, SuccessIcon, ErrorIcon } from "../assets/icons";
+import { DeleteAllButton } from "./TaskActionButtons";
 
 interface TaskListProps {
   todos: Todo[];
@@ -17,74 +16,63 @@ interface TaskListProps {
 }
 
 const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
-  const deleteCompletedTodos = useDeleteCompletedTodos();
-  const deleteFailedTodos = useDeleteFailedTodos();
+  const { handleDeleteAll, isDeleteAllLoading } = useTaskListActions(
+    state as "completed" | "failed",
+    onError
+  );
 
-  const handleDeleteAll = async () => {
-    try {
-      if (state === "completed") {
-        await deleteCompletedTodos.mutateAsync();
-      } else if (state === "failed") {
-        await deleteFailedTodos.mutateAsync();
-      }
-    } catch (error) {
-      console.error(`Failed to delete all ${state} todos:`, error);
-      onError?.(error as Error);
-    }
+  const stateConfig = {
+    pending: {
+      icon: <TaskIcon size="lg" className="text-blue-500 opacity-50" />,
+      title: "No pending tasks",
+      description: "Create a new task to get started",
+    },
+    active: {
+      icon: <TaskIcon size="lg" className="text-green-500 opacity-50" />,
+      title: "No active tasks",
+      description: "Activate a pending task to begin working",
+    },
+    completed: {
+      icon: <SuccessIcon size="lg" className="text-gray-500 opacity-50" />,
+      title: "No completed tasks",
+      description: "Complete some tasks to see them here",
+    },
+    failed: {
+      icon: <ErrorIcon size="lg" className="text-red-500 opacity-50" />,
+      title: "No failed tasks",
+      description: "Tasks that weren't completed will appear here",
+    },
   };
 
-  const isDeleteAllLoading =
-    (state === "completed" && deleteCompletedTodos.isPending) ||
-    (state === "failed" && deleteFailedTodos.isPending);
+  const taskState = stateConfig[state];
 
   if (todos.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="text-6xl mb-4 opacity-50">
-            {state === "pending" && "📋"}
-            {state === "active" && "⚡"}
-            {state === "completed" && "✅"}
-            {state === "failed" && "❌"}
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {state === "pending" && "No pending tasks"}
-            {state === "active" && "No active tasks"}
-            {state === "completed" && "No completed tasks"}
-            {state === "failed" && "No failed tasks"}
-          </h3>
-          <p className="text-gray-500">
-            {state === "pending" && "Create a new task to get started"}
-            {state === "active" && "Activate a pending task to begin working"}
-            {state === "completed" && "Complete some tasks to see them here"}
-            {state === "failed" &&
-              "Tasks that weren't completed will appear here"}
-          </p>
+          <div className="mb-4">{taskState.icon}</div>
+          <Label className="text-lg font-medium text-gray-900 mb-2">
+            {taskState.title}
+          </Label>
+          <p className="text-gray-500">{taskState.description}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1">
       <div className="p-6 max-w-4xl mx-auto">
         {/* Delete All Button for Completed and Failed */}
         {(state === "completed" || state === "failed") && (
           <div className="mb-6 flex justify-end">
-            <button
+            <DeleteAllButton
               onClick={handleDeleteAll}
               disabled={isDeleteAllLoading}
-              className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white text-sm rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors duration-200 font-medium"
-            >
-              <TrashIcon className="w-4 h-4" />
-              <span>
-                {isDeleteAllLoading
-                  ? `Deleting all ${state}...`
-                  : `Delete All ${
-                      state.charAt(0).toUpperCase() + state.slice(1)
-                    }`}
-              </span>
-            </button>
+              isLoading={isDeleteAllLoading}
+              count={todos.length}
+              state={state as "completed" | "failed"}
+            />
           </div>
         )}
 
@@ -97,17 +85,11 @@ const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
                     key={todo.id}
                     todo={todo}
                     onError={onError}
-                    isMobile={false}
                   />
                 );
               case "active":
                 return (
-                  <ActiveTodoItem
-                    key={todo.id}
-                    todo={todo}
-                    onError={onError}
-                    isMobile={false}
-                  />
+                  <ActiveTodoItem key={todo.id} todo={todo} onError={onError} />
                 );
               case "completed":
                 return (
