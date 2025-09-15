@@ -70,6 +70,7 @@ describe('useLoadingState', () => {
         await promise!
       } catch (error) {
         // Expected error
+        void error; // Acknowledge the caught error
       }
     })
     

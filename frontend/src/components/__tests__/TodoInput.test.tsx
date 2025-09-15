@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import TodoInput from "../TodoInput";
+import { TaskType } from "../../constants/taskConstants";
 
 // Mock the hooks
 const mockCreateTodo = vi.fn();
@@ -48,7 +49,7 @@ describe("TodoInput", () => {
   });
 
   it("should render input field for one-time task", () => {
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -58,7 +59,7 @@ describe("TodoInput", () => {
   });
 
   it("should render input field for daily task", () => {
-    render(<TodoInput taskType="daily" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.DAILY} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -68,7 +69,7 @@ describe("TodoInput", () => {
   });
 
   it("should render task type display", () => {
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -76,7 +77,7 @@ describe("TodoInput", () => {
   });
 
   it("should render due date input for one-time tasks", () => {
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -84,7 +85,7 @@ describe("TodoInput", () => {
   });
 
   it("should not render due date input for daily tasks", () => {
-    render(<TodoInput taskType="daily" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.DAILY} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -94,7 +95,7 @@ describe("TodoInput", () => {
   });
 
   it("should render add button", () => {
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -104,7 +105,7 @@ describe("TodoInput", () => {
   it("should call createTodo when form is submitted for one-time task", async () => {
     mockCreateTodo.mockResolvedValue({});
 
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -123,7 +124,7 @@ describe("TodoInput", () => {
     await waitFor(() => {
       expect(mockCreateTodo).toHaveBeenCalledWith({
         text: "Test task",
-        type: "one-time",
+        type: TaskType.ONE_TIME,
         dueAt: dateString,
       });
     });
@@ -132,7 +133,7 @@ describe("TodoInput", () => {
   it("should call createTodo when form is submitted for daily task", async () => {
     mockCreateTodo.mockResolvedValue({});
 
-    render(<TodoInput taskType="daily" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.DAILY} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -145,7 +146,7 @@ describe("TodoInput", () => {
     await waitFor(() => {
       expect(mockCreateTodo).toHaveBeenCalledWith({
         text: "Test habit",
-        type: "daily",
+        type: TaskType.DAILY,
       });
     });
   });
@@ -154,7 +155,7 @@ describe("TodoInput", () => {
     const error = new Error("Creation failed");
     mockCreateTodo.mockRejectedValue(error);
 
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -178,7 +179,7 @@ describe("TodoInput", () => {
   it("should clear input after successful creation", async () => {
     mockCreateTodo.mockResolvedValue({});
 
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -205,7 +206,7 @@ describe("TodoInput", () => {
   });
 
   it("should handle due date change", () => {
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -222,7 +223,7 @@ describe("TodoInput", () => {
   });
 
   it("should not submit empty task", () => {
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -233,7 +234,7 @@ describe("TodoInput", () => {
   });
 
   it("should not submit task with only whitespace", () => {
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 
@@ -247,7 +248,7 @@ describe("TodoInput", () => {
   });
 
   it("should not submit one-time task without due date", () => {
-    render(<TodoInput taskType="one-time" onError={mockOnError} />, {
+    render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
 

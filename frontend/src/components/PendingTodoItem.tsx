@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import type { Todo } from "../services/api";
 import CustomDateTimePicker from "./CustomDateTimePicker";
 import { Input } from "../design-system";
-import { ToDoListItem } from "./ToDoListItem";
+import TodoListItem from "./TodoListItem";
 import { usePendingTodoActions } from "./actions/TaskActions";
 import {
   SaveButton,
@@ -48,7 +48,7 @@ const PendingTodoItem: React.FC<PendingTodoItemProps> = ({ todo, onError }) => {
   );
 
   return (
-    <ToDoListItem
+    <TodoListItem
       todo={todo}
       cardVariant="default"
       cardClassName="hover:shadow-md transition-all duration-200"
@@ -99,7 +99,7 @@ const PendingTodoItem: React.FC<PendingTodoItemProps> = ({ todo, onError }) => {
           />
         </>
       )}
-    </ToDoListItem>
+    </TodoListItem>
   );
 };
 

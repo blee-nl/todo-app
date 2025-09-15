@@ -10,17 +10,19 @@ import BottomTabBar from "./BottomTabBar";
 import FloatingActionButton from "./FloatingActionButton";
 import TaskModal from "./TaskModal";
 import type { TaskType, TaskState } from "../services/api";
+import type { AppError } from "../utils/errorUtils";
+import { DEFAULT_VALUES, TaskState as TaskStateConstants } from "../constants/taskConstants";
 
 const TodoApp: React.FC = () => {
   const { data: groupedTodos, isLoading, error } = useTodos();
   const { handleError, currentError, clearError } = useErrorHandler();
   const [selectedTaskType, setSelectedTaskType] =
-    useState<TaskType>("one-time");
-  const [selectedState, setSelectedState] = useState<TaskState>("pending");
+    useState<TaskType>(DEFAULT_VALUES.TASK_TYPE);
+  const [selectedState, setSelectedState] = useState<TaskState>(DEFAULT_VALUES.TASK_STATE);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   if (error) {
-    return <ErrorDisplay error={error} />;
+    return <ErrorDisplay error={error as AppError} />;
   }
 
   if (isLoading) {
@@ -76,7 +78,7 @@ const TodoApp: React.FC = () => {
         taskType={selectedTaskType}
         setTaskType={setSelectedTaskType}
         onError={handleError}
-        onTaskCreated={() => setSelectedState("pending")}
+        onTaskCreated={() => setSelectedState(TaskStateConstants.PENDING)}
       />
     </Layout>
   );

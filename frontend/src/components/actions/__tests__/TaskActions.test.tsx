@@ -179,7 +179,7 @@ describe("TaskActions", () => {
 
       act(() => {
         result.current.handleKeyDown(
-          enterEvent as any,
+          enterEvent as unknown as React.KeyboardEvent<HTMLElement>,
           mockHandleSave,
           mockHandleCancel
         );
@@ -187,7 +187,7 @@ describe("TaskActions", () => {
 
       act(() => {
         result.current.handleKeyDown(
-          escapeEvent as any,
+          escapeEvent as unknown as React.KeyboardEvent<HTMLElement>,
           mockHandleSave,
           mockHandleCancel
         );

@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import type { TaskState, GroupedTodos } from "../services/api";
 import { Text, Heading, Button } from "../design-system";
+import { TaskState as TaskStateConstants, TASK_STATE_CONFIG } from "../constants/taskConstants";
 
 interface SidebarProps {
   selectedState: TaskState;
@@ -18,35 +19,35 @@ interface SidebarProps {
 
 const navigationItems = [
   {
-    state: "pending" as TaskState,
-    label: "Pending",
+    state: TaskStateConstants.PENDING,
+    label: TASK_STATE_CONFIG[TaskStateConstants.PENDING].label,
     icon: ClipboardDocumentListIcon,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
+    color: TASK_STATE_CONFIG[TaskStateConstants.PENDING].color,
+    bgColor: TASK_STATE_CONFIG[TaskStateConstants.PENDING].bgColor,
     activeBgColor: "bg-blue-100",
   },
   {
-    state: "active" as TaskState,
-    label: "Active",
+    state: TaskStateConstants.ACTIVE,
+    label: TASK_STATE_CONFIG[TaskStateConstants.ACTIVE].label,
     icon: BoltIcon,
-    color: "text-green-600",
-    bgColor: "bg-green-50",
+    color: TASK_STATE_CONFIG[TaskStateConstants.ACTIVE].color,
+    bgColor: TASK_STATE_CONFIG[TaskStateConstants.ACTIVE].bgColor,
     activeBgColor: "bg-green-100",
   },
   {
-    state: "completed" as TaskState,
-    label: "Completed",
+    state: TaskStateConstants.COMPLETED,
+    label: TASK_STATE_CONFIG[TaskStateConstants.COMPLETED].label,
     icon: CheckCircleIcon,
-    color: "text-gray-600",
-    bgColor: "bg-gray-50",
+    color: TASK_STATE_CONFIG[TaskStateConstants.COMPLETED].color,
+    bgColor: TASK_STATE_CONFIG[TaskStateConstants.COMPLETED].bgColor,
     activeBgColor: "bg-gray-100",
   },
   {
-    state: "failed" as TaskState,
-    label: "Failed",
+    state: TaskStateConstants.FAILED,
+    label: TASK_STATE_CONFIG[TaskStateConstants.FAILED].label,
     icon: XCircleIcon,
-    color: "text-red-600",
-    bgColor: "bg-red-50",
+    color: TASK_STATE_CONFIG[TaskStateConstants.FAILED].color,
+    bgColor: TASK_STATE_CONFIG[TaskStateConstants.FAILED].bgColor,
     activeBgColor: "bg-red-100",
   },
 ];

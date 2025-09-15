@@ -6,6 +6,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import type { TaskState } from "../services/api";
+import { TaskState as TaskStateConstants, TASK_STATE_CONFIG } from "../constants/taskConstants";
 
 interface BottomTabBarProps {
   selectedState: TaskState;
@@ -18,23 +19,23 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
 }) => {
   const tabs = [
     {
-      state: "pending" as TaskState,
-      label: "Pending",
+      state: TaskStateConstants.PENDING,
+      label: TASK_STATE_CONFIG[TaskStateConstants.PENDING].label,
       icon: ClipboardDocumentListIcon,
     },
     {
-      state: "active" as TaskState,
-      label: "Active",
+      state: TaskStateConstants.ACTIVE,
+      label: TASK_STATE_CONFIG[TaskStateConstants.ACTIVE].label,
       icon: BoltIcon,
     },
     {
-      state: "completed" as TaskState,
-      label: "Done",
+      state: TaskStateConstants.COMPLETED,
+      label: TASK_STATE_CONFIG[TaskStateConstants.COMPLETED].label,
       icon: CheckCircleIcon,
     },
     {
-      state: "failed" as TaskState,
-      label: "Failed",
+      state: TaskStateConstants.FAILED,
+      label: TASK_STATE_CONFIG[TaskStateConstants.FAILED].label,
       icon: XCircleIcon,
     },
   ];

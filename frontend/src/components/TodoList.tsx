@@ -5,6 +5,7 @@ import ActiveTodoItem from "./ActiveTodoItem";
 import CompletedTodoItem from "./CompletedTodoItem";
 import FailedTodoItem from "./FailedTodoItem";
 import { TaskIcon, SuccessIcon, ErrorIcon } from "../assets/icons";
+import { TaskState as TaskStateConstants } from "../constants/taskConstants";
 
 interface TodoListProps {
   todos: Todo[];
@@ -13,19 +14,19 @@ interface TodoListProps {
 }
 
 const stateConfig = {
-  pending: {
+  [TaskStateConstants.PENDING]: {
     icon: <TaskIcon size="lg" className="text-blue-500" />,
     contextText: "No pending tasks",
   },
-  active: {
+  [TaskStateConstants.ACTIVE]: {
     icon: <TaskIcon size="lg" className="text-green-500" />,
     contextText: "No active tasks",
   },
-  completed: {
+  [TaskStateConstants.COMPLETED]: {
     icon: <SuccessIcon size="lg" className="text-gray-500" />,
     contextText: "No completed tasks",
   },
-  failed: {
+  [TaskStateConstants.FAILED]: {
     icon: <ErrorIcon size="lg" className="text-red-500" />,
     contextText: "No failed tasks",
   },
@@ -47,19 +48,19 @@ const TodoList: React.FC<TodoListProps> = ({ todos, state, onError }) => {
     <div className="space-y-3 max-h-96 overflow-y-auto">
       {todos.map((todo) => {
         switch (state) {
-          case "pending":
+          case TaskStateConstants.PENDING:
             return (
               <PendingTodoItem key={todo.id} todo={todo} onError={onError} />
             );
-          case "active":
+          case TaskStateConstants.ACTIVE:
             return (
               <ActiveTodoItem key={todo.id} todo={todo} onError={onError} />
             );
-          case "completed":
+          case TaskStateConstants.COMPLETED:
             return (
               <CompletedTodoItem key={todo.id} todo={todo} onError={onError} />
             );
-          case "failed":
+          case TaskStateConstants.FAILED:
             return (
               <FailedTodoItem key={todo.id} todo={todo} onError={onError} />
             );

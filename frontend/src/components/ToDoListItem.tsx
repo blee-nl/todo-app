@@ -4,7 +4,7 @@ import { formatDate, formatFullDate } from "../utils/dateUtils";
 import { Card, Badge, Text } from "../design-system";
 import { CalendarIcon, ClockIcon } from "../assets/icons";
 
-export interface ToDoListItemProps {
+export interface TodoListItemProps {
   todo: Todo;
   cardVariant?: "default" | "active" | "overdue" | "failed";
   cardClassName?: string;
@@ -36,7 +36,7 @@ export interface ToDoListItemProps {
   onTextClick?: () => void;
 }
 
-export const ToDoListItem: React.FC<ToDoListItemProps> = ({
+const TodoListItem: React.FC<TodoListItemProps> = ({
   todo,
   cardVariant = "default",
   cardClassName = "",
@@ -73,7 +73,7 @@ export const ToDoListItem: React.FC<ToDoListItemProps> = ({
       : []),
   ];
 
-  const finalMetadataItems =
+  const displayMetadataItems =
     metadataItems.length > 0 ? metadataItems : defaultMetadataItems;
 
   // Default badges
@@ -92,7 +92,7 @@ export const ToDoListItem: React.FC<ToDoListItemProps> = ({
       : []),
   ];
 
-  const finalBadges = badges.length > 0 ? badges : defaultBadges;
+  const displayBadges = badges.length > 0 ? badges : defaultBadges;
 
   return (
     <Card variant={cardVariant} className={cardClassName}>
@@ -100,7 +100,7 @@ export const ToDoListItem: React.FC<ToDoListItemProps> = ({
         <div className="flex-1">
           {/* Badges */}
           <div className="flex items-center space-x-2 mb-3">
-            {finalBadges.map((badge, index) => (
+            {displayBadges.map((badge, index) => (
               <Badge key={index} variant={badge.variant}>
                 {badge.text}
               </Badge>
@@ -142,7 +142,7 @@ export const ToDoListItem: React.FC<ToDoListItemProps> = ({
           {/* Metadata */}
           {showMetadata && (
             <div className="space-y-1">
-              {finalMetadataItems.map((item, index) => (
+              {displayMetadataItems.map((item, index) => (
                 <div key={index} className="flex items-center">
                   {item.icon}
                   <Text variant="muted" className="text-xs">
@@ -162,3 +162,5 @@ export const ToDoListItem: React.FC<ToDoListItemProps> = ({
     </Card>
   );
 };
+
+export default TodoListItem;

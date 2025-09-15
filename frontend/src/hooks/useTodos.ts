@@ -2,9 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { todoApi } from '../services/api';
 import { CONFIG } from '../constants/config';
 import { validateTodoText, validateTodoId, sanitizeText } from '../utils';
-import type { 
-  CreateTodoRequest, 
-  UpdateTodoRequest, 
+import { shouldRetryError, invalidateTodoQueries, updateTodoInCache } from '../utils/queryUtils';
+import { VALID_TASK_TYPES, isOneTimeTask } from '../constants/taskConstants';
+import type {
+  CreateTodoRequest,
+  UpdateTodoRequest,
   ReactivateTodoRequest,
   TaskState
 } from '../services/api';
@@ -26,16 +28,7 @@ export const useTodos = () => {
     queryFn: todoApi.getAllTodos,
     staleTime: CONFIG.QUERY_STALE_TIME,
     gcTime: CONFIG.QUERY_GC_TIME,
-    retry: (failureCount, error) => {
-      // Don't retry on 4xx errors
-      if (error && typeof error === 'object' && 'status' in error) {
-        const status = (error as { status?: number }).status;
-        if (status && status >= 400 && status < 500) {
-          return false;
-        }
-      }
-      return failureCount < 3;
-    },
+    retry: shouldRetryError,
   });
 };
 
@@ -46,15 +39,7 @@ export const useTodosByState = (state: TaskState) => {
     queryFn: () => todoApi.getTodosByState(state),
     staleTime: CONFIG.QUERY_STALE_TIME,
     gcTime: CONFIG.QUERY_GC_TIME,
-    retry: (failureCount, error) => {
-      if (error && typeof error === 'object' && 'status' in error) {
-        const status = (error as { status?: number }).status;
-        if (status && status >= 400 && status < 500) {
-          return false;
-        }
-      }
-      return failureCount < 3;
-    },
+    retry: shouldRetryError,
   });
 };
 
@@ -80,11 +65,11 @@ export const useCreateTodo = () => {
         throw new Error('Invalid todo text');
       }
 
-      if (!todoData.type || !['one-time', 'daily'].includes(todoData.type)) {
+      if (!todoData.type || !VALID_TASK_TYPES.includes(todoData.type)) {
         throw new Error('Invalid task type');
       }
 
-      if (todoData.type === 'one-time' && !todoData.dueAt) {
+      if (isOneTimeTask(todoData.type) && !todoData.dueAt) {
         throw new Error('Due date is required for one-time tasks');
       }
 
@@ -96,9 +81,8 @@ export const useCreateTodo = () => {
       return todoApi.createTodo(sanitizedData);
     },
     onSuccess: () => {
-      // Invalidate and refetch todos
-      queryClient.invalidateQueries({ queryKey: todoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: todoKeys.all });
+      // Use optimized cache invalidation utility
+      invalidateTodoQueries(queryClient, { includeAll: true, includeLists: true });
     },
     onError: (error) => {
       console.error('Failed to create todo:', error);
@@ -128,12 +112,13 @@ export const useUpdateTodo = () => {
       return todoApi.updateTodo(id, sanitizedUpdates);
     },
     onSuccess: (updatedTodo) => {
-      // Update the specific todo in cache
-      queryClient.setQueryData(todoKeys.detail(updatedTodo.id), updatedTodo);
-      
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: todoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState(updatedTodo.state) });
+      // Use optimized cache utilities
+      updateTodoInCache(queryClient, updatedTodo.id, updatedTodo);
+      invalidateTodoQueries(queryClient, {
+        states: [updatedTodo.state],
+        includeLists: true,
+        includeAll: false
+      });
     },
     onError: (error) => {
       console.error('Failed to update todo:', error);
@@ -153,13 +138,13 @@ export const useActivateTodo = () => {
       return todoApi.activateTodo(id);
     },
     onSuccess: (activatedTodo) => {
-      // Update the specific todo in cache
-      queryClient.setQueryData(todoKeys.detail(activatedTodo.id), activatedTodo);
-      
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: todoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('pending') });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('active') });
+      // Use optimized cache utilities
+      updateTodoInCache(queryClient, activatedTodo.id, activatedTodo);
+      invalidateTodoQueries(queryClient, {
+        states: ['pending', 'active'],
+        includeLists: true,
+        includeAll: false
+      });
     },
     onError: (error) => {
       console.error('Failed to activate todo:', error);
@@ -179,13 +164,13 @@ export const useCompleteTodo = () => {
       return todoApi.completeTodo(id);
     },
     onSuccess: (completedTodo) => {
-      // Update the specific todo in cache
-      queryClient.setQueryData(todoKeys.detail(completedTodo.id), completedTodo);
-      
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: todoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('active') });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('completed') });
+      // Use optimized cache utilities
+      updateTodoInCache(queryClient, completedTodo.id, completedTodo);
+      invalidateTodoQueries(queryClient, {
+        states: ['active', 'completed'],
+        includeLists: true,
+        includeAll: false
+      });
     },
     onError: (error) => {
       console.error('Failed to complete todo:', error);
@@ -205,13 +190,13 @@ export const useFailTodo = () => {
       return todoApi.failTodo(id);
     },
     onSuccess: (failedTodo) => {
-      // Update the specific todo in cache
-      queryClient.setQueryData(todoKeys.detail(failedTodo.id), failedTodo);
-      
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: todoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('active') });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('failed') });
+      // Use optimized cache utilities
+      updateTodoInCache(queryClient, failedTodo.id, failedTodo);
+      invalidateTodoQueries(queryClient, {
+        states: ['active', 'failed'],
+        includeLists: true,
+        includeAll: false
+      });
     },
     onError: (error) => {
       console.error('Failed to mark todo as failed:', error);
@@ -231,14 +216,13 @@ export const useReactivateTodo = () => {
       return todoApi.reactivateTodo(id, request);
     },
     onSuccess: (reactivatedTodo) => {
-      // Update the specific todo in cache
-      queryClient.setQueryData(todoKeys.detail(reactivatedTodo.id), reactivatedTodo);
-      
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: todoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('completed') });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('failed') });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('active') });
+      // Use optimized cache utilities
+      updateTodoInCache(queryClient, reactivatedTodo.id, reactivatedTodo);
+      invalidateTodoQueries(queryClient, {
+        states: ['completed', 'failed', 'active'],
+        includeLists: true,
+        includeAll: false
+      });
     },
     onError: (error) => {
       console.error('Failed to re-activate todo:', error);
@@ -258,12 +242,12 @@ export const useDeleteTodo = () => {
       return todoApi.deleteTodo(id);
     },
     onSuccess: (_, deletedId) => {
-      // Remove the todo from cache
-      queryClient.removeQueries({ queryKey: todoKeys.detail(deletedId) });
-      
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: todoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: todoKeys.all });
+      // Use optimized cache utilities
+      invalidateTodoQueries(queryClient, {
+        includeAll: true,
+        includeLists: true,
+        specificTodoId: deletedId
+      });
     },
     onError: (error) => {
       console.error('Failed to delete todo:', error);
@@ -278,9 +262,12 @@ export const useDeleteCompletedTodos = () => {
   return useMutation({
     mutationFn: todoApi.deleteCompletedTodos,
     onSuccess: () => {
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: todoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('completed') });
+      // Use optimized cache utilities
+      invalidateTodoQueries(queryClient, {
+        states: ['completed'],
+        includeLists: true,
+        includeAll: false
+      });
     },
     onError: (error) => {
       console.error('Failed to delete completed todos:', error);
@@ -295,9 +282,12 @@ export const useDeleteFailedTodos = () => {
   return useMutation({
     mutationFn: todoApi.deleteFailedTodos,
     onSuccess: () => {
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: todoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: todoKeys.byState('failed') });
+      // Use optimized cache utilities
+      invalidateTodoQueries(queryClient, {
+        states: ['failed'],
+        includeLists: true,
+        includeAll: false
+      });
     },
     onError: (error) => {
       console.error('Failed to delete failed todos:', error);

@@ -5,6 +5,7 @@ import { Button, Heading, Label, TextArea } from "../design-system";
 import { TaskIcon, HabitIcon, XIcon } from "../assets/icons";
 import { useTaskModalActions } from "./actions/TaskActions";
 import { CancelButton, AddTaskButton } from "./TaskActionButtons";
+import { TaskType as TaskTypeConstants, isOneTimeTask, getTaskPlaceholder } from "../constants/taskConstants";
 
 // Constants
 const PLACEHOLDERS = {
@@ -48,7 +49,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         const todoData = {
           text: text.trim(),
           type: taskType,
-          ...(taskType === "one-time" && dueAt && { dueAt }),
+          ...(isOneTimeTask(taskType) && dueAt && { dueAt }),
         };
 
         await handleCreate(todoData);
@@ -97,20 +98,20 @@ const TaskModal: React.FC<TaskModalProps> = ({
             <div className="flex space-x-2">
               <Button
                 type="button"
-                variant={taskType === "one-time" ? "primary" : "secondary"}
+                variant={taskType === TaskTypeConstants.ONE_TIME ? "primary" : "secondary"}
                 size="md"
                 className="flex-1"
-                onClick={() => setTaskType("one-time")}
+                onClick={() => setTaskType(TaskTypeConstants.ONE_TIME)}
                 leftIcon={<TaskIcon size="sm" />}
               >
                 One-time
               </Button>
               <Button
                 type="button"
-                variant={taskType === "daily" ? "success" : "secondary"}
+                variant={taskType === TaskTypeConstants.DAILY ? "success" : "secondary"}
                 size="md"
                 className="flex-1"
-                onClick={() => setTaskType("daily")}
+                onClick={() => setTaskType(TaskTypeConstants.DAILY)}
                 leftIcon={<HabitIcon size="sm" />}
               >
                 Daily
@@ -123,11 +124,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
             label="Task Description"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={
-              taskType === "one-time"
-                ? PLACEHOLDERS.TASK_DESCRIPTION
-                : PLACEHOLDERS.HABIT_DESCRIPTION
-            }
+            placeholder={getTaskPlaceholder(taskType)}
             rows={3}
             disabled={isCreating}
             maxLength={500}
@@ -138,7 +135,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           />
 
           {/* Due Date for One-time Tasks */}
-          {taskType === "one-time" && (
+          {isOneTimeTask(taskType) && (
             <div>
               <Label htmlFor="modal-due-date" className="mb-2">
                 Due Date & Time
@@ -166,7 +163,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
               disabled={
                 isCreating ||
                 !text.trim() ||
-                (taskType === "one-time" && !dueAt)
+                (isOneTimeTask(taskType) && !dueAt)
               }
               isLoading={isCreating}
               className="flex-1"

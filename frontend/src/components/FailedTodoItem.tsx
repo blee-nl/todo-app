@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { Todo } from "../services/api";
 import CustomDateTimePicker from "./CustomDateTimePicker";
-import { ToDoListItem } from "./ToDoListItem";
+import TodoListItem from "./TodoListItem";
 import { useFailedTodoActions } from "./actions/TaskActions";
 import {
   ReactivateButton,
@@ -79,7 +79,7 @@ const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
   ];
 
   return (
-    <ToDoListItem
+    <TodoListItem
       todo={todo}
       cardVariant="failed"
       cardClassName="border-red-200"
@@ -138,7 +138,7 @@ const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
           </div>
         </div>
       )}
-    </ToDoListItem>
+    </TodoListItem>
   );
 };
 

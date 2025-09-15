@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { Todo } from "../services/api";
 import CustomDateTimePicker from "./CustomDateTimePicker";
-import { ToDoListItem } from "./ToDoListItem";
+import TodoListItem from "./TodoListItem";
 import { useCompletedTodoActions } from "./actions/TaskActions";
 import {
   ReactivateButton,
@@ -19,25 +19,29 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
   todo,
   onError,
 }) => {
-  const [showReactivateForm, setShowReactivateForm] = useState(false);
-  const [newDueAt, setNewDueAt] = useState("");
+  const [isReactivateFormVisible, setIsReactivateFormVisible] = useState(false);
+  const [newDueDateTime, setNewDueDateTime] = useState("");
 
   const {
-    handleReactivate: reactivateAction,
+    handleReactivate: performReactivate,
     handleDelete,
     handleCancelReactivate,
     reactivateTodo,
     deleteTodo,
   } = useCompletedTodoActions(todo, onError);
 
-  const handleReactivate = async () => {
-    await reactivateAction(newDueAt, setShowReactivateForm, setNewDueAt);
+  const handleReactivateTask = async () => {
+    await performReactivate(
+      newDueDateTime,
+      setIsReactivateFormVisible,
+      setNewDueDateTime
+    );
   };
 
-  const getMinDate = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 1);
-    return now.toISOString().slice(0, 16);
+  const getMinimumDateTime = () => {
+    const currentTime = new Date();
+    currentTime.setMinutes(currentTime.getMinutes() + 1);
+    return currentTime.toISOString().slice(0, 16);
   };
 
   const badges = [
@@ -81,7 +85,7 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
   ];
 
   return (
-    <ToDoListItem
+    <TodoListItem
       todo={todo}
       cardVariant="default"
       textVariant="muted"
@@ -90,10 +94,10 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
       badges={badges}
       metadataItems={metadataItems}
     >
-      {!showReactivateForm ? (
+      {!isReactivateFormVisible ? (
         <>
           <ReactivateButton
-            onClick={() => setShowReactivateForm(true)}
+            onClick={() => setIsReactivateFormVisible(true)}
             disabled={reactivateTodo.isPending}
             isLoading={reactivateTodo.isPending}
             size="sm"
@@ -111,19 +115,19 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
           {todo.type === "one-time" && (
             <CustomDateTimePicker
               id="modal-due-date"
-              value={newDueAt}
-              onChange={setNewDueAt}
-              min={getMinDate()}
+              value={newDueDateTime}
+              onChange={setNewDueDateTime}
+              min={getMinimumDateTime()}
               placeholder="Select new due date"
             />
           )}
 
           <div className="flex space-x-1">
             <ReactivateButton
-              onClick={handleReactivate}
+              onClick={handleReactivateTask}
               disabled={
                 reactivateTodo.isPending ||
-                (todo.type === "one-time" && !newDueAt)
+                (todo.type === "one-time" && !newDueDateTime)
               }
               isLoading={reactivateTodo.isPending}
               size="sm"
@@ -131,14 +135,17 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
 
             <CancelButton
               onClick={() =>
-                handleCancelReactivate(setShowReactivateForm, setNewDueAt)
+                handleCancelReactivate(
+                  setIsReactivateFormVisible,
+                  setNewDueDateTime
+                )
               }
               size="sm"
             />
           </div>
         </div>
       )}
-    </ToDoListItem>
+    </TodoListItem>
   );
 };
 

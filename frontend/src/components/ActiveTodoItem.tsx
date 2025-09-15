@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import type { Todo } from "../services/api";
 import CustomDateTimePicker from "./CustomDateTimePicker";
 import { Input } from "../design-system";
-import { ToDoListItem } from "./ToDoListItem";
+import TodoListItem from "./TodoListItem";
 import { useActiveTodoActions } from "./actions/TaskActions";
 import {
   SaveButton,
@@ -11,6 +11,7 @@ import {
   FailedButton,
   DeleteButton,
 } from "./TaskActionButtons";
+import { CardVariant, isOneTimeTask } from "../constants/taskConstants";
 
 interface ActiveTodoItemProps {
   todo: Todo;
@@ -63,9 +64,9 @@ const ActiveTodoItem: React.FC<ActiveTodoItemProps> = ({ todo, onError }) => {
   const dueDateColor = isOverdue ? "text-red-600" : "text-gray-500";
 
   return (
-    <ToDoListItem
+    <TodoListItem
       todo={todo}
-      cardVariant="active"
+      cardVariant={CardVariant.ACTIVE}
       cardClassName="hover:shadow-md transition-all duration-200"
       onTextClick={() => setIsEditing(true)}
       dueDateIconColor={dueDateColor}
@@ -82,7 +83,7 @@ const ActiveTodoItem: React.FC<ActiveTodoItemProps> = ({ todo, onError }) => {
             autoFocus
             maxLength={500}
           />
-          {todo.type === "one-time" && (
+          {isOneTimeTask(todo.type) && (
             <CustomDateTimePicker
               value={editDueAt}
               onChange={setEditDueAt}
@@ -124,7 +125,7 @@ const ActiveTodoItem: React.FC<ActiveTodoItemProps> = ({ todo, onError }) => {
           />
         </>
       )}
-    </ToDoListItem>
+    </TodoListItem>
   );
 };
 
