@@ -3,7 +3,7 @@ import type { Todo } from "../services/api";
 import CustomDateTimePicker from "./CustomDateTimePicker";
 import { Input } from "../design-system";
 import TodoListItem from "./TodoListItem";
-import { usePendingTodoActions } from "./actions/TaskActions";
+import { usePendingTaskActions } from "./actions/TaskActions";
 import {
   SaveButton,
   CancelButton,
@@ -22,15 +22,15 @@ const PendingTodoItem: React.FC<PendingTodoItemProps> = ({ todo, onError }) => {
   const [editDueAt, setEditDueAt] = useState(todo.dueAt || "");
 
   const {
-    handleActivate,
-    handleDelete,
-    handleSave: saveAction,
-    handleCancel: cancelAction,
-    handleKeyDown: keyDownAction,
-    activateTodo,
-    deleteTodo,
-    updateTodo,
-  } = usePendingTodoActions(todo, onError);
+    activateTask,
+    deleteTask,
+    saveTaskEdits: saveAction,
+    cancelTaskEdits: cancelAction,
+    handleTaskEditKeyDown: keyDownAction,
+    activateTaskMutation,
+    deleteTaskMutation,
+    updateTaskMutation,
+  } = usePendingTaskActions(todo, onError);
 
   const handleSave = useCallback(async () => {
     await saveAction(editText, editDueAt, setIsEditing);
@@ -74,8 +74,8 @@ const PendingTodoItem: React.FC<PendingTodoItemProps> = ({ todo, onError }) => {
           <div className="flex space-x-2">
             <SaveButton
               onClick={handleSave}
-              disabled={updateTodo.isPending}
-              isLoading={updateTodo.isPending}
+              disabled={updateTaskMutation.isPending}
+              isLoading={updateTaskMutation.isPending}
               size="sm"
             />
 
@@ -85,16 +85,16 @@ const PendingTodoItem: React.FC<PendingTodoItemProps> = ({ todo, onError }) => {
       ) : (
         <>
           <ActivateButton
-            onClick={handleActivate}
-            disabled={activateTodo.isPending}
-            isLoading={activateTodo.isPending}
+            onClick={activateTask}
+            disabled={activateTaskMutation.isPending}
+            isLoading={activateTaskMutation.isPending}
             size="sm"
           />
 
           <DeleteButton
-            onClick={handleDelete}
-            disabled={deleteTodo.isPending}
-            isLoading={deleteTodo.isPending}
+            onClick={deleteTask}
+            disabled={deleteTaskMutation.isPending}
+            isLoading={deleteTaskMutation.isPending}
             size="sm"
           />
         </>

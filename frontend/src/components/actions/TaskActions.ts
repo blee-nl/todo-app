@@ -12,83 +12,83 @@ import {
 } from "../../hooks/useTodos";
 import { TaskState, isOneTimeTask } from "../../constants/taskConstants";
 
-// TaskList Actions
-export const useTaskListActions = (state: typeof TaskState.COMPLETED | typeof TaskState.FAILED, onError?: (error: Error) => void) => {
-  const deleteCompletedTodos = useDeleteCompletedTodos();
-  const deleteFailedTodos = useDeleteFailedTodos();
+// TaskList Bulk Actions
+export const useTaskListBulkActions = (taskState: typeof TaskState.COMPLETED | typeof TaskState.FAILED, onError?: (error: Error) => void) => {
+  const deleteCompletedTasksMutation = useDeleteCompletedTodos();
+  const deleteFailedTasksMutation = useDeleteFailedTodos();
 
-  const handleDeleteAll = async () => {
+  const deleteAllTasksInCurrentState = async () => {
     try {
-      if (state === TaskState.COMPLETED) {
-        await deleteCompletedTodos.mutateAsync();
-      } else if (state === TaskState.FAILED) {
-        await deleteFailedTodos.mutateAsync();
+      if (taskState === TaskState.COMPLETED) {
+        await deleteCompletedTasksMutation.mutateAsync();
+      } else if (taskState === TaskState.FAILED) {
+        await deleteFailedTasksMutation.mutateAsync();
       }
     } catch (error) {
-      console.error(`Failed to delete all ${state} todos:`, error);
+      console.error(`Failed to delete all ${taskState} tasks:`, error);
       onError?.(error as Error);
     }
   };
 
   return {
-    handleDeleteAll,
-    isDeleteAllLoading: (state === TaskState.COMPLETED && deleteCompletedTodos.isPending) ||
-                       (state === TaskState.FAILED && deleteFailedTodos.isPending),
+    deleteAllTasksInCurrentState,
+    isDeletingAllTasks: (taskState === TaskState.COMPLETED && deleteCompletedTasksMutation.isPending) ||
+                        (taskState === TaskState.FAILED && deleteFailedTasksMutation.isPending),
   };
 };
 
-// PendingTodoItem Actions
-export const usePendingTodoActions = (todo: Todo, onError?: (error: Error) => void) => {
-  const activateTodo = useActivateTodo();
-  const deleteTodo = useDeleteTodo();
-  const updateTodo = useUpdateTodo();
+// Pending Task Actions
+export const usePendingTaskActions = (task: Todo, onError?: (error: Error) => void) => {
+  const activateTaskMutation = useActivateTodo();
+  const deleteTaskMutation = useDeleteTodo();
+  const updateTaskMutation = useUpdateTodo();
 
-  const handleActivate = async () => {
+  const activateTask = async () => {
     try {
-      await activateTodo.mutateAsync(todo.id);
+      await activateTaskMutation.mutateAsync(task.id);
     } catch (error) {
-      console.error("Failed to activate todo:", error);
+      console.error("Failed to activate task:", error);
       onError?.(error as Error);
     }
   };
 
-  const handleDelete = async () => {
+  const deleteTask = async () => {
     try {
-      await deleteTodo.mutateAsync(todo.id);
+      await deleteTaskMutation.mutateAsync(task.id);
     } catch (error) {
-      console.error("Failed to delete todo:", error);
+      console.error("Failed to delete task:", error);
       onError?.(error as Error);
     }
   };
 
-  const handleSave = async (editText: string, editDueAt: string, setIsEditing: (editing: boolean) => void) => {
+  const saveTaskEdits = async (editText: string, editDueAt: string, setIsEditing: (editing: boolean) => void) => {
     if (!editText.trim()) return;
 
     try {
       const updateData: { text: string; dueAt?: string } = { text: editText.trim() };
-      if (isOneTimeTask(todo.type) && editDueAt) {
+      if (isOneTimeTask(task.type) && editDueAt) {
         updateData.dueAt = editDueAt;
       }
 
-      await updateTodo.mutateAsync({
-        id: todo.id,
+      await updateTaskMutation.mutateAsync({
+        id: task.id,
         updates: updateData,
       });
 
       setIsEditing(false);
     } catch (error) {
-      console.error("Failed to update todo:", error);
+      console.error("Failed to update task:", error);
       onError?.(error as Error);
     }
   };
 
-  const handleCancel = (setEditText: (text: string) => void, setEditDueAt: (dueAt: string) => void, setIsEditing: (editing: boolean) => void) => {
-    setEditText(todo.text);
-    setEditDueAt(todo.dueAt || "");
+  const cancelTaskEdits = (setEditText: (text: string) => void, setEditDueAt: (dueAt: string) => void, setIsEditing: (editing: boolean) => void) => {
+    setEditText(task.text);
+    setEditDueAt(task.dueAt || "");
     setIsEditing(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, handleSave: () => void, handleCancel: () => void) => {
+  const handleTaskEditKeyDown = (e: React.KeyboardEvent, handleSave: () => void, handleCancel: () => void) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleSave();
@@ -99,14 +99,14 @@ export const usePendingTodoActions = (todo: Todo, onError?: (error: Error) => vo
   };
 
   return {
-    handleActivate,
-    handleDelete,
-    handleSave,
-    handleCancel,
-    handleKeyDown,
-    activateTodo,
-    deleteTodo,
-    updateTodo,
+    activateTask,
+    deleteTask,
+    saveTaskEdits,
+    cancelTaskEdits,
+    handleTaskEditKeyDown,
+    activateTaskMutation,
+    deleteTaskMutation,
+    updateTaskMutation,
   };
 };
 

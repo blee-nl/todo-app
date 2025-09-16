@@ -4,7 +4,7 @@ import PendingTodoItem from "./PendingTodoItem";
 import ActiveTodoItem from "./ActiveTodoItem";
 import CompletedTodoItem from "./CompletedTodoItem";
 import FailedTodoItem from "./FailedTodoItem";
-import { useTaskListActions } from "./actions/TaskActions";
+import { useTaskListBulkActions } from "./actions/TaskActions";
 import { Label } from "../design-system";
 import { TaskIcon, SuccessIcon, ErrorIcon } from "../assets/icons";
 import { DeleteAllButton } from "./TaskActionButtons";
@@ -17,7 +17,7 @@ interface TaskListProps {
 }
 
 const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
-  const { handleDeleteAll, isDeleteAllLoading } = useTaskListActions(
+  const { deleteAllTasksInCurrentState, isDeletingAllTasks } = useTaskListBulkActions(
     state as typeof TaskStateConstants.COMPLETED | typeof TaskStateConstants.FAILED,
     onError
   );
@@ -68,9 +68,9 @@ const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
         {(isCompletedTask(state) || isFailedTask(state)) && (
           <div className="mb-6 flex justify-end">
             <DeleteAllButton
-              onClick={handleDeleteAll}
-              disabled={isDeleteAllLoading}
-              isLoading={isDeleteAllLoading}
+              onClick={deleteAllTasksInCurrentState}
+              disabled={isDeletingAllTasks}
+              isLoading={isDeletingAllTasks}
               count={todos.length}
               state={state as typeof TaskStateConstants.COMPLETED | typeof TaskStateConstants.FAILED}
             />
