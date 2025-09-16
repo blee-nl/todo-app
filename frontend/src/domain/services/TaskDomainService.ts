@@ -112,4 +112,28 @@ export class TaskDomainService {
     if (this.isCompletedTask(task.state)) return 5;
     return 6;
   }
+
+  static hasNotifications(task: Task): boolean {
+    return !!task.notification?.enabled;
+  }
+
+  static isNotificationScheduled(task: Task): boolean {
+    return this.hasNotifications(task) && !task.notification?.notifiedAt && !!task.dueAt;
+  }
+
+  static getNotificationTime(task: Task): Date | null {
+    if (!this.hasNotifications(task) || !task.dueAt || !task.notification?.reminderMinutes) {
+      return null;
+    }
+
+    const dueTime = new Date(task.dueAt);
+    return new Date(dueTime.getTime() - (task.notification.reminderMinutes * 60 * 1000));
+  }
+
+  static isNotificationDue(task: Task): boolean {
+    const notificationTime = this.getNotificationTime(task);
+    if (!notificationTime) return false;
+
+    return notificationTime <= new Date() && !task.notification?.notifiedAt;
+  }
 }

@@ -55,7 +55,7 @@ const SaveButton: React.FC<SaveButtonProps> = ({
     variant="primary"
     size={size}
     onClick={onClick}
-    disabled={disabled}
+    disabled={disabled || isLoading}
     isLoading={isLoading}
     className={className}
   >
@@ -84,7 +84,7 @@ const DeleteButton: React.FC<DeleteButtonProps> = ({
     variant="danger"
     size={size}
     onClick={onClick}
-    disabled={disabled}
+    disabled={disabled || isLoading}
     isLoading={isLoading}
     leftIcon={<TrashIcon size="sm" />}
     className={className}
@@ -114,7 +114,7 @@ const CompleteButton: React.FC<CompleteButtonProps> = ({
     variant="success"
     size={size}
     onClick={onClick}
-    disabled={disabled}
+    disabled={disabled || isLoading}
     isLoading={isLoading}
     leftIcon={<CheckIcon size="sm" />}
     className={className}
@@ -144,7 +144,7 @@ const ActivateButton: React.FC<ActivateButtonProps> = ({
     variant="primary"
     size={size}
     onClick={onClick}
-    disabled={disabled}
+    disabled={disabled || isLoading}
     isLoading={isLoading}
     leftIcon={<CheckIcon size="sm" />}
     className={className}
@@ -174,7 +174,7 @@ const FailedButton: React.FC<FailedButtonProps> = ({
     variant="warning"
     size={size}
     onClick={onClick}
-    disabled={disabled}
+    disabled={disabled || isLoading}
     isLoading={isLoading}
     leftIcon={<XIcon size="sm" />}
     className={className}
@@ -215,7 +215,7 @@ const DeleteAllButton: React.FC<DeleteAllButtonProps> = ({
       variant="danger"
       size={size}
       onClick={onClick}
-      disabled={disabled || count === 0}
+      disabled={disabled || count === 0 || isLoading}
       isLoading={isLoading}
       leftIcon={<TrashIcon size="sm" />}
       className={className}
@@ -246,7 +246,7 @@ const ReactivateButton: React.FC<ReactivateButtonProps> = ({
     variant="primary"
     size={size}
     onClick={onClick}
-    disabled={disabled}
+    disabled={disabled || isLoading}
     isLoading={isLoading}
     leftIcon={<RefreshIcon size="sm" />}
     className={className}
@@ -278,7 +278,7 @@ const AddTaskButton: React.FC<AddTaskButtonProps> = ({
     variant="primary"
     size={size}
     onClick={onClick}
-    disabled={disabled}
+    disabled={disabled || isLoading}
     isLoading={isLoading}
     leftIcon={<PlusIcon size="sm" />}
     className={className}

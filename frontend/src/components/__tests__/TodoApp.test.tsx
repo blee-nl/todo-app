@@ -157,8 +157,7 @@ describe("TodoApp", () => {
 
     expect(screen.getAllByText("Pending")).toHaveLength(2); // Sidebar and bottom tab
     expect(screen.getAllByText("Active")).toHaveLength(2); // Sidebar and bottom tab
-    expect(screen.getAllByText("Completed")).toHaveLength(1); // Only sidebar
-    expect(screen.getByText("Done")).toBeInTheDocument(); // Bottom tab shows "Done"
+    expect(screen.getAllByText("Completed")).toHaveLength(2); // Sidebar and bottom tab
     expect(screen.getAllByText("Failed")).toHaveLength(2); // Sidebar and bottom tab
   });
 
@@ -186,8 +185,7 @@ describe("TodoApp", () => {
 
     expect(screen.getAllByText("Pending")).toHaveLength(2); // Sidebar and bottom tab
     expect(screen.getAllByText("Active")).toHaveLength(2); // Sidebar and bottom tab
-    expect(screen.getAllByText("Completed")).toHaveLength(1); // Only sidebar
-    expect(screen.getByText("Done")).toBeInTheDocument(); // Bottom tab shows "Done"
+    expect(screen.getAllByText("Completed")).toHaveLength(2); // Sidebar and bottom tab
     expect(screen.getAllByText("Failed")).toHaveLength(2); // Sidebar and bottom tab
   });
 
@@ -278,6 +276,9 @@ describe("TodoApp", () => {
     const error = new Error("Test error");
     mockCreateTodo.mockRejectedValue(error);
 
+    // Suppress console.error for this test
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     render(<TodoApp />, { wrapper: createWrapper() });
 
     const addButton = screen.getByText("Add Task");
@@ -298,9 +299,15 @@ describe("TodoApp", () => {
           text: "Test task",
           type: "one-time",
           dueAt: "2025-12-31T23:59",
+          notification: {
+            enabled: false,
+            reminderMinutes: 15,
+          },
         });
       },
       { timeout: 3000 }
     );
+
+    consoleSpy.mockRestore();
   });
 });

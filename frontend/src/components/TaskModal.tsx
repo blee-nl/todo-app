@@ -5,7 +5,11 @@ import { Button, Heading, Label, TextArea } from "../design-system";
 import { TaskIcon, HabitIcon, XIcon } from "../assets/icons";
 import { useTaskModalActions } from "./actions/TaskActions";
 import { CancelButton, AddTaskButton } from "./TaskActionButtons";
-import { TaskType as TaskTypeConstants, isOneTimeTask, getTaskPlaceholder } from "../constants/taskConstants";
+import { TaskType as TaskTypeConstants, getTaskPlaceholder } from "../constants/taskConstants";
+import NotificationTimePicker from "./NotificationTimePicker";
+import { NotificationManager } from "../utils/notificationUtils";
+import { NOTIFICATION_CONSTANTS } from "../constants/notificationConstants";
+import { TIME_CONSTANTS } from "../constants/timeConstants";
 
 // Constants
 const PLACEHOLDERS = {
@@ -36,8 +40,58 @@ const TaskModal: React.FC<TaskModalProps> = ({
 }) => {
   const [text, setText] = useState("");
   const [dueAt, setDueAt] = useState("");
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const [reminderMinutes, setReminderMinutes] = useState<number>(NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
 
   const { handleCreate, isCreating } = useTaskModalActions(onError);
+
+  // Extract task type handlers
+  const handleSelectOneTimeType = useCallback(() => {
+    setTaskType(TaskTypeConstants.ONE_TIME);
+  }, []);
+
+  const handleSelectDailyType = useCallback(() => {
+    setTaskType(TaskTypeConstants.DAILY);
+  }, []);
+
+  // Extract input handlers
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+  }, []);
+
+  const handleReminderMinutesChange = useCallback((minutes: number) => {
+    setReminderMinutes(minutes);
+  }, []);
+
+  // Calculate derived states
+  const isOneTimeType = taskType === TaskTypeConstants.ONE_TIME;
+  const isDailyType = taskType === TaskTypeConstants.DAILY;
+  const dueDateLabel = isOneTimeType ? "Due Date & Time" : "Start Date & Time";
+  const dueDatePlaceholder = isOneTimeType ? PLACEHOLDERS.DUE_DATE_TIME : "When should this daily task start?";
+  const showNotificationSettings = Boolean(dueAt);
+
+  // Calculate button disabled state
+  const isSubmitDisabled = isCreating || !text.trim() || (isOneTimeType && !dueAt);
+
+  const handleNotificationEnabledChange = useCallback(async (enabled: boolean) => {
+    // Always update the state first to reflect user intent
+    setNotificationEnabled(enabled);
+
+    // Only request permission if enabling notifications
+    if (enabled && NotificationManager.getPermissionStatus() !== 'granted') {
+      try {
+        const permission = await NotificationManager.requestPermission();
+        if (permission !== 'granted') {
+          // Show warning but keep the user's preference enabled
+          // The notification will be saved to the database but won't actually fire
+          onError?.(new Error('Notification permission denied. Notifications are enabled but won\'t work until you grant browser permission.'));
+        }
+      } catch (error) {
+        // Show warning but keep the user's preference enabled
+        onError?.(new Error('Failed to request notification permission. You can enable this later in browser settings.'));
+      }
+    }
+  }, [onError]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -49,12 +103,22 @@ const TaskModal: React.FC<TaskModalProps> = ({
         const todoData = {
           text: text.trim(),
           type: taskType,
-          ...(isOneTimeTask(taskType) && dueAt && { dueAt }),
+          ...(dueAt && { dueAt }),
+          // Always include notification settings when dueAt is present
+          ...(dueAt && {
+            notification: {
+              enabled: notificationEnabled,
+              reminderMinutes,
+            },
+          }),
         };
+
 
         await handleCreate(todoData);
         setText("");
         setDueAt("");
+        setNotificationEnabled(false);
+        setReminderMinutes(NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
         onTaskCreated?.();
         onClose();
       } catch (error) {
@@ -62,12 +126,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
         console.error("Failed to create todo:", error);
       }
     },
-    [text, taskType, dueAt, handleCreate, onClose, onTaskCreated]
+    [text, taskType, dueAt, notificationEnabled, reminderMinutes, handleCreate, onClose, onTaskCreated]
   );
 
   const getMinDate = () => {
     const now = new Date();
-    now.setMinutes(now.getMinutes() + 1);
+    now.setMinutes(now.getMinutes() + TIME_CONSTANTS.ONE_MINUTE);
     return now.toISOString().slice(0, 16);
   };
 
@@ -98,20 +162,20 @@ const TaskModal: React.FC<TaskModalProps> = ({
             <div className="flex space-x-2">
               <Button
                 type="button"
-                variant={taskType === TaskTypeConstants.ONE_TIME ? "primary" : "secondary"}
+                variant={isOneTimeType ? "primary" : "secondary"}
                 size="md"
                 className="flex-1"
-                onClick={() => setTaskType(TaskTypeConstants.ONE_TIME)}
+                onClick={handleSelectOneTimeType}
                 leftIcon={<TaskIcon size="sm" />}
               >
                 One-time
               </Button>
               <Button
                 type="button"
-                variant={taskType === TaskTypeConstants.DAILY ? "success" : "secondary"}
+                variant={isDailyType ? "success" : "secondary"}
                 size="md"
                 className="flex-1"
-                onClick={() => setTaskType(TaskTypeConstants.DAILY)}
+                onClick={handleSelectDailyType}
                 leftIcon={<HabitIcon size="sm" />}
               >
                 Daily
@@ -123,7 +187,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           <TextArea
             label="Task Description"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleTextChange}
             placeholder={getTaskPlaceholder(taskType)}
             rows={3}
             disabled={isCreating}
@@ -134,19 +198,31 @@ const TaskModal: React.FC<TaskModalProps> = ({
             }}
           />
 
-          {/* Due Date for One-time Tasks */}
-          {isOneTimeTask(taskType) && (
-            <div>
-              <Label htmlFor="modal-due-date" className="mb-2">
-                Due Date & Time
-              </Label>
-              <CustomDateTimePicker
-                id="modal-due-date"
-                value={dueAt}
-                onChange={setDueAt}
-                min={getMinDate()}
-                disabled={isCreating}
-                placeholder={PLACEHOLDERS.DUE_DATE_TIME}
+          {/* Due Date & Time */}
+          <div>
+            <Label htmlFor="modal-due-date" className="mb-2">
+              {dueDateLabel}
+            </Label>
+            <CustomDateTimePicker
+              id="modal-due-date"
+              value={dueAt}
+              onChange={setDueAt}
+              min={getMinDate()}
+              disabled={isCreating}
+              placeholder={dueDatePlaceholder}
+            />
+          </div>
+
+          {/* Notification Settings */}
+          {showNotificationSettings && (
+            <div className="border-t pt-4">
+              <NotificationTimePicker
+                enabled={notificationEnabled}
+                reminderMinutes={reminderMinutes}
+                onEnabledChange={handleNotificationEnabledChange}
+                onReminderMinutesChange={handleReminderMinutesChange}
+                dueAt={dueAt}
+                taskType={taskType}
               />
             </div>
           )}
@@ -160,11 +236,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
             />
             <AddTaskButton
               type="submit"
-              disabled={
-                isCreating ||
-                !text.trim() ||
-                (isOneTimeTask(taskType) && !dueAt)
-              }
+              disabled={isSubmitDisabled}
               isLoading={isCreating}
               className="flex-1"
             />

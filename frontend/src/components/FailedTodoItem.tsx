@@ -9,6 +9,8 @@ import {
   CancelButton,
 } from "./TaskActionButtons";
 import { ReactivateIcon, XIcon } from "../assets/icons";
+import NotificationTimePicker from "./NotificationTimePicker";
+import { NOTIFICATION_CONSTANTS } from "../constants/notificationConstants";
 
 interface FailedTodoItemProps {
   todo: Todo;
@@ -18,6 +20,8 @@ interface FailedTodoItemProps {
 const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
   const [showReactivateForm, setShowReactivateForm] = useState(false);
   const [newDueAt, setNewDueAt] = useState("");
+  const [notificationEnabled, setNotificationEnabled] = useState(todo.notification?.enabled || false);
+  const [reminderMinutes, setReminderMinutes] = useState(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
 
   const {
     handleReactivate: reactivateAction,
@@ -28,7 +32,12 @@ const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
   } = useFailedTodoActions(todo, onError);
 
   const handleReactivate = async () => {
-    await reactivateAction(newDueAt, setShowReactivateForm, setNewDueAt);
+    const notificationData = {
+      enabled: notificationEnabled,
+      reminderMinutes: reminderMinutes,
+    };
+
+    await reactivateAction(newDueAt, setShowReactivateForm, setNewDueAt, notificationData);
   };
 
   const getMinDate = () => {
@@ -118,6 +127,19 @@ const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
             </div>
           )}
 
+          {newDueAt && (
+            <div className="border-t pt-3">
+              <NotificationTimePicker
+                enabled={notificationEnabled}
+                reminderMinutes={reminderMinutes}
+                onEnabledChange={setNotificationEnabled}
+                onReminderMinutesChange={setReminderMinutes}
+                dueAt={newDueAt}
+                taskType={todo.type}
+              />
+            </div>
+          )}
+
           <div className="flex space-x-1">
             <ReactivateButton
               onClick={handleReactivate}
@@ -130,9 +152,11 @@ const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
             />
 
             <CancelButton
-              onClick={() =>
-                handleCancelReactivate(setShowReactivateForm, setNewDueAt)
-              }
+              onClick={() => {
+                handleCancelReactivate(setShowReactivateForm, setNewDueAt);
+                setNotificationEnabled(todo.notification?.enabled || false);
+                setReminderMinutes(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
+              }}
               size="sm"
             />
           </div>

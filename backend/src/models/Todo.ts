@@ -6,12 +6,20 @@ export type TaskType = 'one-time' | 'daily';
 // Task states
 export type TaskState = 'pending' | 'active' | 'completed' | 'failed';
 
+// Notification interface
+export interface INotification {
+  enabled: boolean;
+  reminderMinutes: number; // Minutes before due time
+  notifiedAt?: Date; // Track when notification was sent
+}
+
 // Todo interface
 export interface ITodo extends Document {
   text: string;
   type: TaskType;
   state: TaskState;
   dueAt?: Date; // For one-time tasks
+  notification?: INotification; // Notification settings
   createdAt: Date;
   updatedAt: Date;
   activatedAt?: Date; // When task was moved to active
@@ -19,12 +27,12 @@ export interface ITodo extends Document {
   failedAt?: Date; // When task was marked as failed
   originalId?: string; // For tracking re-activated tasks
   isReactivation?: boolean; // Flag for re-activated tasks
-  
+
   // Instance methods
   activate(): Promise<ITodo>;
   complete(): Promise<ITodo>;
   fail(): Promise<ITodo>;
-  reactivate(newDueAt?: Date): Promise<ITodo>;
+  reactivate(newDueAt?: Date, notificationSettings?: { enabled: boolean; reminderMinutes: number }): Promise<ITodo>;
 }
 
 // Todo schema
@@ -50,6 +58,22 @@ const todoSchema = new Schema<ITodo>({
   dueAt: {
     type: Date,
     required: false
+  },
+  notification: {
+    enabled: {
+      type: Boolean,
+      default: false
+    },
+    reminderMinutes: {
+      type: Number,
+      default: 15, // Default 15 minutes before
+      min: [1, 'Reminder time must be at least 1 minute'],
+      max: [10080, 'Reminder time cannot exceed 7 days (10080 minutes)']
+    },
+    notifiedAt: {
+      type: Date,
+      default: null
+    }
   },
   activatedAt: {
     type: Date,
@@ -91,6 +115,7 @@ todoSchema.index({ text: 'text' }); // Text search index
 todoSchema.index({ activatedAt: -1 });
 todoSchema.index({ completedAt: -1 });
 todoSchema.index({ failedAt: -1 });
+todoSchema.index({ 'notification.enabled': 1, dueAt: 1, 'notification.notifiedAt': 1 }); // For notification queries
 
 // Pre-save middleware for validation and state transitions
 todoSchema.pre('save', function(next) {
@@ -136,6 +161,7 @@ interface ITodoModel extends mongoose.Model<ITodo> {
   findActiveByType(type: TaskType): mongoose.Query<ITodo[], ITodo>;
   findOverdueTasks(): mongoose.Query<ITodo[], ITodo>;
   findDailyTasksForToday(): mongoose.Query<ITodo[], ITodo>;
+  findTasksReadyForNotification(): mongoose.Query<ITodo[], ITodo>;
 }
 
 // Static methods
@@ -165,12 +191,29 @@ todoSchema.statics.findDailyTasksForToday = function() {
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  
+
   return this.find({
     type: 'daily',
     state: 'active',
     activatedAt: { $gte: today, $lt: tomorrow }
   });
+};
+
+todoSchema.statics.findTasksReadyForNotification = function() {
+  const now = new Date();
+
+  return this.find({
+    'notification.enabled': true,
+    'notification.notifiedAt': { $exists: false },
+    dueAt: { $exists: true },
+    state: { $in: ['pending', 'active'] },
+    $expr: {
+      $lte: [
+        { $subtract: ['$dueAt', { $multiply: ['$notification.reminderMinutes', 60000] }] },
+        now
+      ]
+    }
+  }).sort({ dueAt: 1 });
 };
 
 // Instance methods
@@ -198,9 +241,26 @@ todoSchema.methods.fail = function() {
   return this.save();
 };
 
-todoSchema.methods.reactivate = function(newDueAt?: Date) {
+todoSchema.methods.reactivate = function(newDueAt?: Date, notificationSettings?: { enabled: boolean; reminderMinutes: number }) {
   // Create a new instance for re-activation
   const TodoModel = this.constructor as mongoose.Model<ITodo>;
+
+  // Use provided notification settings or preserve existing ones
+  let notification = undefined;
+  if (notificationSettings) {
+    notification = {
+      enabled: notificationSettings.enabled,
+      reminderMinutes: notificationSettings.reminderMinutes,
+      notifiedAt: null // Reset for new task
+    };
+  } else if (this.notification) {
+    notification = {
+      enabled: this.notification.enabled,
+      reminderMinutes: this.notification.reminderMinutes,
+      notifiedAt: null // Reset for new task
+    };
+  }
+
   const reactivatedTask = new TodoModel({
     text: this.text,
     type: this.type,
@@ -208,20 +268,16 @@ todoSchema.methods.reactivate = function(newDueAt?: Date) {
     dueAt: newDueAt || this.dueAt,
     originalId: this._id.toString(),
     isReactivation: true,
-    activatedAt: new Date()
+    activatedAt: new Date(),
+    notification: notification
   });
-  
+
+  // Explicitly set state again after creation to override any defaults
+  reactivatedTask.state = 'active';
+  reactivatedTask.activatedAt = new Date();
+
   return reactivatedTask.save();
 };
-
-// Pre-save validation to ensure dueAt is required for one-time tasks
-todoSchema.pre('save', function(next) {
-  if (this.type === 'one-time' && !this.dueAt) {
-    const error = new Error('Due date is required for one-time tasks');
-    return next(error);
-  }
-  next();
-});
 
 // Create and export the model
 const Todo = mongoose.model<ITodo, ITodoModel>('Todo', todoSchema);

@@ -1,11 +1,26 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import type { Task } from "../../../domain/entities/Task";
 import { TaskDomainService } from "../../../domain/services/TaskDomainService";
 import { TaskState } from "../../../constants/taskConstants";
 import { useTaskService } from "../../tasks/hooks/useTaskService";
+import { NotificationScheduler } from "../../../services/notificationScheduler";
 
 export const useTaskManagement = () => {
   const taskService = useTaskService();
+
+  // Initialize notification scheduler and schedule notifications for all tasks
+  useEffect(() => {
+    NotificationScheduler.initialize();
+
+    if (taskService.tasks.length > 0) {
+      NotificationScheduler.scheduleTaskNotifications(taskService.tasks);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      NotificationScheduler.clearAll();
+    };
+  }, [taskService.tasks]);
 
   const tasksByState = useMemo(() => {
     const grouped = {
@@ -66,45 +81,92 @@ export const useTaskManagement = () => {
   const taskActions = {
     createTask: async (request: Parameters<typeof taskService.createTask.mutateAsync>[0]) => {
       const result = await taskService.createTask.mutateAsync(request);
+      if (result.success && result.task) {
+        try {
+          NotificationScheduler.scheduleTaskNotification(result.task);
+        } catch (error) {
+          console.warn('Failed to schedule notification for task:', error);
+        }
+      }
       return result;
     },
 
     updateTask: async (id: string, request: Parameters<typeof taskService.updateTask.mutateAsync>[0]['request']) => {
       const result = await taskService.updateTask.mutateAsync({ id, request });
+      if (result.success && result.task) {
+        try {
+          NotificationScheduler.updateTaskNotification(result.task);
+        } catch (error) {
+          console.warn('Failed to update notification for task:', error);
+        }
+      }
       return result;
     },
 
     deleteTask: async (id: string) => {
+      try {
+        NotificationScheduler.clearTaskNotification(id);
+      } catch (error) {
+        console.warn('Failed to clear notification for task:', error);
+      }
       const result = await taskService.deleteTask.mutateAsync(id);
       return result;
     },
 
     activateTask: async (id: string) => {
       const result = await taskService.activateTask.mutateAsync(id);
+      if (result.success && result.task) {
+        try {
+          NotificationScheduler.handleTaskStateChange(result.task);
+        } catch (error) {
+          console.warn('Failed to handle notification state change for task:', error);
+        }
+      }
       return result;
     },
 
     completeTask: async (id: string) => {
       const result = await taskService.completeTask.mutateAsync(id);
+      if (result.success && result.task) {
+        try {
+          NotificationScheduler.handleTaskStateChange(result.task);
+        } catch (error) {
+          console.warn('Failed to handle notification state change for task:', error);
+        }
+      }
       return result;
     },
 
     failTask: async (id: string) => {
       const result = await taskService.failTask.mutateAsync(id);
+      if (result.success && result.task) {
+        NotificationScheduler.handleTaskStateChange(result.task);
+      }
       return result;
     },
 
     reactivateTask: async (id: string, request?: Parameters<typeof taskService.reactivateTask.mutateAsync>[0]['request']) => {
       const result = await taskService.reactivateTask.mutateAsync({ id, request });
+      if (result.success && result.task) {
+        NotificationScheduler.handleTaskStateChange(result.task);
+      }
       return result;
     },
 
     deleteAllCompleted: async () => {
+      // Clear notifications for completed tasks before deleting
+      tasksByState.completed.forEach(task => {
+        NotificationScheduler.clearTaskNotification(task.id);
+      });
       const result = await taskService.deleteCompletedTasks.mutateAsync();
       return result;
     },
 
     deleteAllFailed: async () => {
+      // Clear notifications for failed tasks before deleting
+      tasksByState.failed.forEach(task => {
+        NotificationScheduler.clearTaskNotification(task.id);
+      });
       const result = await taskService.deleteFailedTasks.mutateAsync();
       return result;
     },

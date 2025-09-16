@@ -173,6 +173,9 @@ describe("FailedTodoItem", () => {
     const error = new Error("Deletion failed");
     mockDeleteTodo.mockRejectedValue(error);
 
+    // Suppress console.error for this test
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     render(<FailedTodoItem todo={mockTodo} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
@@ -183,6 +186,8 @@ describe("FailedTodoItem", () => {
     await waitFor(() => {
       expect(mockOnError).toHaveBeenCalledWith(error);
     });
+
+    consoleSpy.mockRestore();
   });
 
   it("should show re-activation status for reactivated todos", () => {

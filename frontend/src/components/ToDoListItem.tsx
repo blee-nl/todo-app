@@ -3,6 +3,7 @@ import type { Todo } from "../services/api";
 import { formatDate, formatFullDate } from "../utils/dateUtils";
 import { Card, Badge, Text } from "../design-system";
 import { CalendarIcon, ClockIcon } from "../assets/icons";
+import NotificationIndicator from "./NotificationIndicator";
 
 export interface TodoListItemProps {
   todo: Todo;
@@ -32,6 +33,7 @@ export interface TodoListItemProps {
       | "gray";
     text: string;
   }>;
+  showNotificationIndicator?: boolean;
   children?: React.ReactNode;
   onTextClick?: () => void;
 }
@@ -50,6 +52,7 @@ const TodoListItem: React.FC<TodoListItemProps> = ({
   showMetadata = true,
   metadataItems = [],
   badges = [],
+  showNotificationIndicator = true,
   children,
   onTextClick,
 }) => {
@@ -117,27 +120,63 @@ const TodoListItem: React.FC<TodoListItemProps> = ({
                 : ""
             }`}
             onClick={onTextClick}
+            onKeyDown={onTextClick ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onTextClick();
+              }
+            } : undefined}
+            tabIndex={onTextClick ? 0 : undefined}
+            role={onTextClick ? "button" : undefined}
+            aria-label={onTextClick ? `Edit task: ${todo.text}` : undefined}
           >
             {todo.text}
           </Text>
 
-          {/* Due Date */}
-          {showDueDate && todo.dueAt && (
-            <div className="mb-3 flex items-center">
-              <CalendarIcon
-                className={`w-4 h-4 mr-1 ${dueDateIconColor}`}
-                size="sm"
-              />
-              <Text
-                variant="small"
-                weight="medium"
-                className={dueDateTextColor}
-              >
-                {dueDateLabel}{" "}
-                <span className="ml-1">{formatFullDate(todo.dueAt)}</span>
-              </Text>
-            </div>
-          )}
+          {/* Due Date & Notification Section */}
+          <div className="mb-3">
+            {/* Due Date */}
+            {showDueDate && todo.dueAt && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <CalendarIcon
+                    className={`w-4 h-4 mr-1 ${dueDateIconColor}`}
+                    size="sm"
+                  />
+                  <Text
+                    variant="small"
+                    weight="medium"
+                    className={dueDateTextColor}
+                  >
+                    {dueDateLabel}{" "}
+                    <span className="ml-1">{formatFullDate(todo.dueAt)}</span>
+                  </Text>
+                </div>
+
+                {/* Notification Indicator for tasks with due dates */}
+                {showNotificationIndicator && (
+                  <NotificationIndicator
+                    todo={todo}
+                    size="sm"
+                    showTime={true}
+                    className="ml-2"
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Notification Indicator for tasks without due dates (daily tasks) */}
+            {showNotificationIndicator && !todo.dueAt && (
+              <div className="flex items-center justify-end">
+                <NotificationIndicator
+                  todo={todo}
+                  size="sm"
+                  showTime={true}
+                  className="ml-2"
+                />
+              </div>
+            )}
+          </div>
 
           {/* Metadata */}
           {showMetadata && (

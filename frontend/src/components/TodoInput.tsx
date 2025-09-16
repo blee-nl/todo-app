@@ -35,7 +35,7 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
         const todoData = {
           text: taskText.trim(),
           type: taskType,
-          ...(isOneTimeTask(taskType) && dueDateTime && { dueAt: dueDateTime }),
+          ...(isOneTimeTaskType && dueDateTime && { dueAt: dueDateTime }),
         };
 
         await createTodo.mutateAsync(todoData);
@@ -61,11 +61,21 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
     [handleSubmit]
   );
 
+  const handleTaskTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTaskText(e.target.value);
+  }, []);
+
   const getMinimumDateTime = () => {
     const currentTime = new Date();
     currentTime.setMinutes(currentTime.getMinutes() + 1); // At least 1 minute in the future
     return currentTime.toISOString().slice(0, 16);
   };
+
+  // Calculate derived state
+  const isOneTimeTaskType = isOneTimeTask(taskType);
+  const isSubmitDisabled = isCreating ||
+    !taskText.trim() ||
+    (isOneTimeTaskType && !dueDateTime);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -83,7 +93,7 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
           <Input
             type="text"
             value={taskText}
-            onChange={(e) => setTaskText(e.target.value)}
+            onChange={handleTaskTextChange}
             onKeyDown={handleKeyDown}
             placeholder={getTaskPlaceholder(taskType)}
             disabled={isCreating}
@@ -96,7 +106,7 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
           </div>
         </div>
 
-        {isOneTimeTask(taskType) && (
+        {isOneTimeTaskType && (
           <div>
             <Label htmlFor="due-date" className="mb-2">
               Due Date & Time
@@ -119,11 +129,7 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
 
           <Button
             type="submit"
-            disabled={
-              isCreating ||
-              !taskText.trim() ||
-              (isOneTimeTask(taskType) && !dueDateTime)
-            }
+            disabled={isSubmitDisabled}
             variant="primary"
             size="md"
             isLoading={isCreating}

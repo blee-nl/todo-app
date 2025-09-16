@@ -1,6 +1,6 @@
 // Application configuration constants
 export const APP_CONFIG = {
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL && import.meta.env.VITE_API_BASE_URL !== 'undefined' ? import.meta.env.VITE_API_BASE_URL : 'http://localhost:5001',
   API_TIMEOUT: 10000,
   QUERY_STALE_TIME: 1000 * 60 * 5, // 5 minutes
   QUERY_GC_TIME: 1000 * 60 * 10, // 10 minutes

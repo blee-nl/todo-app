@@ -113,6 +113,12 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
     setIsOpen(false);
   };
 
+  const handleToggleOpen = () => {
+    if (!disabled) {
+      setIsOpen(!isOpen);
+    }
+  };
+
   const handleCancel = () => {
     setIsOpen(false);
   };
@@ -129,7 +135,7 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
       <Button
         type="button"
         id={id || undefined}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={handleToggleOpen}
         disabled={disabled}
         variant="ghost"
         className={getInputButtonClasses(isOpen, disabled)}

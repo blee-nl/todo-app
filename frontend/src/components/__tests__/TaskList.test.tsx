@@ -18,6 +18,16 @@ vi.mock("../actions/TaskActions", () => ({
     },
     isDeleteAllLoading: false,
   }),
+  useTaskListBulkActions: (_state: string, onError?: (error: Error) => void) => ({
+    deleteAllTasksInCurrentState: async () => {
+      try {
+        await mockHandleDeleteAll();
+      } catch (error) {
+        onError?.(error as Error);
+      }
+    },
+    isDeletingAllTasks: false,
+  }),
 }));
 
 // Mock the todo item components

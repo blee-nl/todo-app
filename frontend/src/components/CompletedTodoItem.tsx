@@ -9,6 +9,8 @@ import {
   CancelButton,
 } from "./TaskActionButtons";
 import { ReactivateIcon, CheckIcon } from "../assets/icons";
+import NotificationTimePicker from "./NotificationTimePicker";
+import { NOTIFICATION_CONSTANTS } from "../constants/notificationConstants";
 
 interface CompletedTodoItemProps {
   todo: Todo;
@@ -21,6 +23,8 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
 }) => {
   const [isReactivateFormVisible, setIsReactivateFormVisible] = useState(false);
   const [newDueDateTime, setNewDueDateTime] = useState("");
+  const [notificationEnabled, setNotificationEnabled] = useState(todo.notification?.enabled || false);
+  const [reminderMinutes, setReminderMinutes] = useState(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
 
   const {
     handleReactivate: performReactivate,
@@ -31,10 +35,16 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
   } = useCompletedTodoActions(todo, onError);
 
   const handleReactivateTask = async () => {
+    const notificationData = {
+      enabled: notificationEnabled,
+      reminderMinutes: reminderMinutes,
+    };
+
     await performReactivate(
       newDueDateTime,
       setIsReactivateFormVisible,
-      setNewDueDateTime
+      setNewDueDateTime,
+      notificationData
     );
   };
 
@@ -122,6 +132,19 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
             />
           )}
 
+          {newDueDateTime && (
+            <div className="border-t pt-3">
+              <NotificationTimePicker
+                enabled={notificationEnabled}
+                reminderMinutes={reminderMinutes}
+                onEnabledChange={setNotificationEnabled}
+                onReminderMinutesChange={setReminderMinutes}
+                dueAt={newDueDateTime}
+                taskType={todo.type}
+              />
+            </div>
+          )}
+
           <div className="flex space-x-1">
             <ReactivateButton
               onClick={handleReactivateTask}
@@ -134,12 +157,14 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
             />
 
             <CancelButton
-              onClick={() =>
+              onClick={() => {
                 handleCancelReactivate(
                   setIsReactivateFormVisible,
                   setNewDueDateTime
-                )
-              }
+                );
+                setNotificationEnabled(todo.notification?.enabled || false);
+                setReminderMinutes(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
+              }}
               size="sm"
             />
           </div>

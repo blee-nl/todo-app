@@ -68,6 +68,8 @@ export const ReactivateIcon = createBaseIcon(ReactivateIconElement);
 export const InfoIcon = createBaseIcon(InfoIconElement);
 export const CloseIcon = createBaseIcon(CloseIconElement);
 export const RefreshIcon = createBaseIcon(RefreshIconElement);
+export { default as BellIcon } from "./BellIcon";
+export { default as BellSlashIcon } from "./BellSlashIcon";
 
 // Export types
 export type { IconProps };

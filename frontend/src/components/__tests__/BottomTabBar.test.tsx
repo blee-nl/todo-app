@@ -16,7 +16,7 @@ describe("BottomTabBar", () => {
 
     expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
-    expect(screen.getByText("Done")).toBeInTheDocument();
+    expect(screen.getByText("Completed")).toBeInTheDocument();
     expect(screen.getByText("Failed")).toBeInTheDocument();
   });
 

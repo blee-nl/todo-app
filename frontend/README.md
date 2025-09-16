@@ -5,19 +5,22 @@ A modern React todo application built with TypeScript, Tailwind CSS, and React Q
 ## Features
 
 - ✅ **Task Management**: Add, edit, delete, and complete todos with four states (Pending, Active, Completed, Failed)
+- 🔔 **Smart Notifications**: Browser notifications with customizable reminder times (5 minutes to 7 days before due)
 - 🎨 **iOS Reminders-inspired Design**: Clean, modern interface with rounded cards and glass morphism effects
 - 📱 **Responsive Layout**: Desktop sidebar + mobile bottom tabs with floating action button
 - ⚡ **Real-time Updates**: React Query for efficient data fetching and caching
 - 🛡️ **Comprehensive Error Handling**: User-friendly error messages and validation
-- 🧪 **100% Test Coverage**: React Testing Library with comprehensive test suite (270 tests passing)
+- 🧪 **Extensive Test Coverage**: React Testing Library with comprehensive test suite (1365+ tests passing)
 - ♿ **Full Accessibility**: ARIA labels, keyboard navigation, and screen reader support
 - 🎯 **Task Types**: Support for one-time and daily tasks with due dates
 - 🔄 **Re-activation**: Bring completed/failed tasks back to active state
 - 🗑️ **Bulk Operations**: Delete all completed or failed tasks at once
 - 🎨 **Design System**: Reusable components with consistent styling and behavior
+- 🏗️ **Clean Architecture**: Domain-driven design with clear separation of concerns
 - 🔧 **Centralized Actions**: Task actions centralized in custom hooks for better maintainability
 - 📅 **Enhanced Calendar**: Custom date/time picker with today highlighting and validation
 - 🎯 **Optimized Performance**: Memoized components and efficient state management
+- 🔔 **Notification Management**: Permission handling, scheduling, and browser API integration
 
 ## Tech Stack
 
@@ -25,6 +28,8 @@ A modern React todo application built with TypeScript, Tailwind CSS, and React Q
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first CSS framework with custom styles
 - **React Query (TanStack Query)** - Server state management
+- **Clean Architecture** - Domain, Application, and Infrastructure layers
+- **Browser Notifications API** - Native browser notifications with service worker support
 - **Custom Design System** - Reusable components (Button, Input, TextArea, Badge, etc.)
 - **Custom Icons** - Optimized SVG icon system with size variants
 - **Vite** - Fast build tool and dev server
@@ -81,13 +86,17 @@ This project uses Vitest with React Testing Library for comprehensive testing.
 
 ### Test Coverage
 
-- **Components**: All React components with user interactions (270 tests passing)
-- **Hooks**: Custom hooks with various scenarios
-- **Utils**: Utility functions with edge cases
+- **Components**: All React components with user interactions (1365+ tests passing)
+- **Hooks**: Custom hooks with various scenarios including notification hooks
+- **Utils**: Utility functions with edge cases including notification utilities
 - **API**: Service layer with mocked responses
 - **Error Handling**: Error states and recovery
 - **Design System**: All reusable components tested
 - **Task Actions**: Centralized action hooks tested
+- **Domain Layer**: Entity models and domain services
+- **Application Layer**: Use cases and application services
+- **Infrastructure**: Repository adapters and external integrations
+- **Notification System**: Browser API integration and permission handling
 
 ### Running Tests
 
@@ -162,6 +171,8 @@ src/
 │   ├── TaskList.tsx     # Task list with delete all functionality
 │   ├── TaskModal.tsx    # Modal for adding/editing tasks
 │   ├── TodoInput.tsx    # Input component for new tasks
+│   ├── NotificationTimePicker.tsx    # Notification time picker
+│   ├── NotificationIndicator.tsx     # Notification status indicator
 │   ├── PendingTodoItem.tsx    # Pending task component
 │   ├── ActiveTodoItem.tsx     # Active task component
 │   ├── CompletedTodoItem.tsx  # Completed task component
@@ -171,6 +182,35 @@ src/
 │   ├── actions/         # Centralized task actions
 │   │   └── TaskActions.ts # Custom hooks for task operations
 │   └── __tests__/       # Component tests
+├── domain/              # Domain layer (Clean Architecture)
+│   ├── entities/        # Domain entities
+│   │   ├── Task.ts      # Task entity with business logic
+│   │   └── __tests__/   # Entity tests
+│   ├── repositories/    # Repository interfaces
+│   │   └── TaskRepository.ts # Task repository interface
+│   └── services/        # Domain services
+│       ├── TaskDomainService.ts # Task business logic
+│       └── __tests__/   # Domain service tests
+├── application/         # Application layer (Clean Architecture)
+│   └── services/        # Application services
+│       ├── TaskApplicationService.ts # Use cases orchestration
+│       └── __tests__/   # Application service tests
+├── infrastructure/      # Infrastructure layer (Clean Architecture)
+│   ├── adapters/        # External service adapters
+│   │   ├── ApiTaskRepository.ts # API repository implementation
+│   │   └── __tests__/   # Adapter tests
+│   └── container/       # Dependency injection
+│       ├── ServiceContainer.ts # DI container
+│       └── __tests__/   # Container tests
+├── features/            # Feature modules
+│   ├── tasks/           # Task management feature
+│   │   ├── components/  # Feature-specific components
+│   │   ├── hooks/       # Feature-specific hooks
+│   │   └── __tests__/   # Feature tests
+│   └── task-management/ # Advanced task management
+│       ├── components/  # Task management components
+│       ├── hooks/       # Task management hooks
+│       └── __tests__/   # Task management tests
 ├── design-system/       # Reusable design system
 │   ├── components/      # Design system components
 │   │   ├── Button.tsx   # Reusable button component
@@ -185,21 +225,32 @@ src/
 │       └── *.tsx        # Individual icon components
 ├── hooks/               # Custom React hooks
 │   ├── useTodos.ts      # Todo-related hooks
+│   ├── useErrorHandler.ts # Error handling hook
+│   ├── useLoadingState.ts # Loading state hook
 │   └── __tests__/       # Hook tests
-├── services/            # API services
+├── services/            # Infrastructure services
 │   ├── api.ts           # Axios configuration and API calls
-│   └── __tests__/       # API tests
+│   ├── notificationScheduler.ts # Notification scheduling service
+│   └── __tests__/       # Service tests
 ├── utils/               # Utility functions
 │   ├── dateUtils.ts     # Date formatting
 │   ├── errorUtils.ts    # Error handling
 │   ├── validation.ts    # Input validation
+│   ├── notificationUtils.ts # Notification utilities
+│   ├── queryUtils.ts    # React Query utilities
 │   ├── styles/          # Style utilities
 │   │   └── classNames.ts # Class name utilities
 │   ├── index.ts         # Utility exports
 │   └── __tests__/       # Utility tests
 ├── constants/           # Configuration
 │   ├── config.ts        # App configuration
+│   ├── notificationConstants.ts # Notification constants
+│   ├── timeConstants.ts # Time-related constants
+│   ├── taskConstants.ts # Task-related constants
 │   └── __tests__/       # Config tests
+├── types/               # TypeScript type definitions
+│   ├── notification.ts  # Notification types
+│   └── index.ts         # Type exports
 ├── styles/              # Custom CSS
 │   └── calendar.css     # Custom calendar styling
 └── test/                # Testing utilities

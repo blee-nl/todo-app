@@ -17,6 +17,11 @@ export class ApiTaskRepository implements TaskRepository {
       failedAt: todo.failedAt,
       updatedAt: todo.updatedAt,
       isReactivation: todo.isReactivation ?? false,
+      notification: todo.notification ? {
+        enabled: todo.notification.enabled,
+        reminderMinutes: todo.notification.reminderMinutes,
+        notifiedAt: todo.notification.notifiedAt ? new Date(todo.notification.notifiedAt) : undefined,
+      } : undefined,
     };
   }
 
@@ -25,13 +30,15 @@ export class ApiTaskRepository implements TaskRepository {
       text: request.text,
       type: request.type,
       dueAt: request.dueAt,
+      notification: request.notification,
     };
   }
 
-  private mapUpdateTaskToTodo(request: UpdateTaskRequest): { text?: string; dueAt?: string } {
+  private mapUpdateTaskToTodo(request: UpdateTaskRequest): { text?: string; dueAt?: string; notification?: { enabled: boolean; reminderMinutes: number } } {
     return {
       text: request.text,
       ...(request.dueAt !== undefined && { dueAt: request.dueAt }),
+      ...(request.notification !== undefined && { notification: request.notification }),
     };
   }
 

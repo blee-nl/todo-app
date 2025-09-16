@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTodos } from "../hooks/useTodos";
 import { useErrorHandler } from "../hooks/useErrorHandler";
 import { ErrorDisplay } from "./ErrorDisplay";
@@ -12,6 +12,7 @@ import TaskModal from "./TaskModal";
 import type { TaskType, TaskState } from "../services/api";
 import type { AppError } from "../utils/errorUtils";
 import { DEFAULT_VALUES, TaskState as TaskStateConstants } from "../constants/taskConstants";
+import { NotificationScheduler } from "../services/notificationScheduler";
 
 const TodoApp: React.FC = () => {
   const { data: groupedTodos, isLoading, error } = useTodos();
@@ -20,6 +21,32 @@ const TodoApp: React.FC = () => {
     useState<TaskType>(DEFAULT_VALUES.TASK_TYPE);
   const [selectedState, setSelectedState] = useState<TaskState>(DEFAULT_VALUES.TASK_STATE);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+
+  const handleOpenTaskModal = () => {
+    setIsTaskModalOpen(true);
+  };
+
+  const handleCloseTaskModal = () => {
+    setIsTaskModalOpen(false);
+  };
+
+  const handleTaskCreated = () => {
+    setSelectedState(TaskStateConstants.PENDING);
+  };
+
+  // Initialize notification system on app start
+  useEffect(() => {
+    // Initialize notification scheduler
+    NotificationScheduler.initialize();
+
+    // Check for notification permission on app start (non-intrusive)
+    if (NotificationScheduler.getNotificationStatus('dummy').browserSupported) {
+      const permission = NotificationScheduler.getNotificationStatus('dummy').permissionGranted;
+      if (!permission) {
+        console.log('Notifications are supported but permission not granted. User can enable in task creation.');
+      }
+    }
+  }, []);
 
   if (error) {
     return <ErrorDisplay error={error as AppError} />;
@@ -50,7 +77,7 @@ const TodoApp: React.FC = () => {
       <div className="flex-1 flex flex-col bg-white min-h-screen lg:min-h-0 lg:ml-64">
         <TopBar
           selectedState={selectedState}
-          onAddTask={() => setIsTaskModalOpen(true)}
+          onAddTask={handleOpenTaskModal}
         />
         <div className="flex-1 pt-16 pb-20 lg:pt-0 lg:pb-0 bg-white flex flex-col">
           {currentError && (
@@ -71,14 +98,14 @@ const TodoApp: React.FC = () => {
         selectedState={selectedState}
         onStateChange={setSelectedState}
       />
-      <FloatingActionButton onClick={() => setIsTaskModalOpen(true)} />
+      <FloatingActionButton onClick={handleOpenTaskModal} />
       <TaskModal
         isOpen={isTaskModalOpen}
-        onClose={() => setIsTaskModalOpen(false)}
+        onClose={handleCloseTaskModal}
         taskType={selectedTaskType}
         setTaskType={setSelectedTaskType}
         onError={handleError}
-        onTaskCreated={() => setSelectedState(TaskStateConstants.PENDING)}
+        onTaskCreated={handleTaskCreated}
       />
     </Layout>
   );

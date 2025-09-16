@@ -155,6 +155,9 @@ describe("TodoInput", () => {
     const error = new Error("Creation failed");
     mockCreateTodo.mockRejectedValue(error);
 
+    // Suppress console.error for this test
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     render(<TodoInput taskType={TaskType.ONE_TIME} onError={mockOnError} />, {
       wrapper: createWrapper(),
     });
@@ -174,6 +177,8 @@ describe("TodoInput", () => {
     await waitFor(() => {
       expect(mockOnError).toHaveBeenCalledWith(error);
     });
+
+    consoleSpy.mockRestore();
   });
 
   it("should clear input after successful creation", async () => {

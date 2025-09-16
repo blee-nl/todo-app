@@ -7,17 +7,19 @@ A TypeScript-based REST API for the Todo application built with Express.js and M
 - ✨ **Full TypeScript Support** - Type-safe development with interfaces and types
 - 🚀 **RESTful API** - Complete CRUD operations for todos with advanced state management
 - 🗄️ **MongoDB Integration** - Mongoose ODM with proper schemas and validation
+- 🔔 **Notification System** - Backend notification data modeling and service layer
 - 🔒 **Input Validation** - Request validation and error handling
 - 📊 **Rate Limiting** - Basic rate limiting for API protection
 - 🎯 **Error Handling** - Comprehensive error handling with proper HTTP status codes
-- 📝 **Logging** - Request logging and error tracking
+- 📝 **Logging** - Request logging and error tracking with centralized logger
 - 🔄 **Hot Reload** - Development server with automatic reloading
-- 🧪 **Comprehensive Testing** - Jest test suite with 80%+ coverage
+- 🧪 **Comprehensive Testing** - Jest test suite with 211+ tests passing
 - 🏗️ **In-Memory Testing** - MongoDB Memory Server for isolated tests
 - 🎯 **Task Types** - Support for one-time and daily tasks
 - 🔄 **State Management** - Four task states: pending, active, completed, failed
 - 🚫 **Duplicate Prevention** - Prevents duplicate active tasks by content
 - 📅 **Due Date Handling** - Calendar integration for one-time tasks
+- ⏰ **Notification Scheduling** - Task reminder system with customizable timing
 
 ## API Endpoints
 
@@ -89,15 +91,39 @@ Make sure MongoDB is running locally or update the `MONGO_URI` in your `.env` fi
 ```
 src/
 ├── controllers/     # Request handlers
+│   ├── todoController.ts # Main todo controller
 │   └── __tests__/   # Controller tests
+│       ├── todoController.test.ts # Main controller tests
+│       └── todoController.notification.test.ts # Notification feature tests
 ├── middleware/      # Custom middleware
+│   ├── validation.ts # Input validation middleware
 │   └── __tests__/   # Middleware tests
 ├── models/          # Mongoose models
+│   ├── Todo.ts      # Todo model with notification support
 │   └── __tests__/   # Model tests
+│       ├── Todo.test.ts # Main model tests
+│       └── Todo.notification.test.ts # Notification model tests
+├── services/        # Business logic services
+│   ├── NotificationService.ts # Notification service layer
+│   └── __tests__/   # Service tests
+│       └── NotificationService.test.ts # Notification service tests
 ├── routes/          # API routes
+│   ├── todoRoutes.ts # Todo route definitions
+│   ├── docsRoutes.ts # API documentation routes
 │   └── __tests__/   # Route integration tests
+├── config/          # Configuration
+│   ├── swagger.ts   # OpenAPI/Swagger configuration
+│   └── __tests__/   # Config tests
+├── constants/       # Application constants
+│   ├── timeConstants.ts # Time-related constants
+│   └── __tests__/   # Constants tests
+├── utils/           # Utility functions
+│   ├── logger.ts    # Centralized logging utility
+│   └── __tests__/   # Utility tests
 ├── test/            # Test utilities and setup
-└── index.ts         # Main server file
+│   ├── setup.ts     # Test configuration
+│   └── basic.test.ts # Basic test verification
+└── index.ts         # Main server file with middleware setup
 ```
 
 ## Development Scripts
@@ -140,10 +166,15 @@ Basic rate limiting is implemented:
 The backend includes a comprehensive test suite with Jest:
 
 ### Test Coverage
-- **Models**: Todo model validation, methods, and middleware
-- **Controllers**: All CRUD operations and error handling
-- **Middleware**: Input validation and rate limiting
-- **Routes**: Integration tests for all API endpoints
+- **Models**: Todo model validation, methods, and notification support (30+ tests)
+- **Controllers**: All CRUD operations, error handling, and notification features (40+ tests)
+- **Services**: Notification service layer with comprehensive testing (15+ tests)
+- **Middleware**: Input validation and rate limiting (8+ tests)
+- **Routes**: Integration tests for all API endpoints (20+ tests)
+- **Configuration**: Swagger/OpenAPI configuration testing (50+ tests)
+- **Constants**: Time constants and validation (40+ tests)
+- **Utils**: Logger and utility function testing (30+ tests)
+- **Integration**: Full application testing with real database (25+ tests)
 
 ### Test Features
 - **In-Memory MongoDB**: Uses MongoDB Memory Server for isolated tests

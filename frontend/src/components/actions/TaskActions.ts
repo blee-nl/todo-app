@@ -61,13 +61,16 @@ export const usePendingTaskActions = (task: Todo, onError?: (error: Error) => vo
     }
   };
 
-  const saveTaskEdits = async (editText: string, editDueAt: string, setIsEditing: (editing: boolean) => void) => {
+  const saveTaskEdits = async (editText: string, editDueAt: string, setIsEditing: (editing: boolean) => void, notificationData?: { enabled: boolean; reminderMinutes: number }) => {
     if (!editText.trim()) return;
 
     try {
-      const updateData: { text: string; dueAt?: string } = { text: editText.trim() };
-      if (isOneTimeTask(task.type) && editDueAt) {
+      const updateData: { text: string; dueAt?: string; notification?: { enabled: boolean; reminderMinutes: number } } = { text: editText.trim() };
+      if (editDueAt) {
         updateData.dueAt = editDueAt;
+      }
+      if (notificationData) {
+        updateData.notification = notificationData;
       }
 
       await updateTaskMutation.mutateAsync({
@@ -82,9 +85,17 @@ export const usePendingTaskActions = (task: Todo, onError?: (error: Error) => vo
     }
   };
 
-  const cancelTaskEdits = (setEditText: (text: string) => void, setEditDueAt: (dueAt: string) => void, setIsEditing: (editing: boolean) => void) => {
+  const cancelTaskEdits = (
+    setEditText: (text: string) => void,
+    setEditDueAt: (dueAt: string) => void,
+    setIsEditing: (editing: boolean) => void,
+    setNotificationEnabled?: (enabled: boolean) => void,
+    setReminderMinutes?: (minutes: number) => void
+  ) => {
     setEditText(task.text);
     setEditDueAt(task.dueAt || "");
+    if (setNotificationEnabled) setNotificationEnabled(task.notification?.enabled || false);
+    if (setReminderMinutes) setReminderMinutes(task.notification?.reminderMinutes || 15);
     setIsEditing(false);
   };
 
@@ -117,19 +128,40 @@ export const useActiveTodoActions = (todo: Todo, onError?: (error: Error) => voi
   const failTodo = useFailTodo();
   const deleteTodo = useDeleteTodo();
 
-  const handleSave = async (editText: string, editDueAt: string, setIsEditing: (editing: boolean) => void) => {
-    if (editText.trim() === todo.text && editDueAt === (todo.dueAt || "")) {
+  const handleSave = async (
+    editText: string,
+    editDueAt: string,
+    setIsEditing: (editing: boolean) => void,
+    notificationData?: { enabled: boolean; reminderMinutes: number }
+  ) => {
+    const hasTextChanged = editText.trim() !== todo.text;
+    const hasDueDateChanged = editDueAt !== (todo.dueAt || "");
+    const hasNotificationChanged = notificationData && (
+      notificationData.enabled !== (todo.notification?.enabled || false) ||
+      notificationData.reminderMinutes !== (todo.notification?.reminderMinutes || 15)
+    );
+
+    if (!hasTextChanged && !hasDueDateChanged && !hasNotificationChanged) {
       setIsEditing(false);
       return;
     }
 
     try {
+      const updates: any = {
+        text: editText.trim(),
+        ...(isOneTimeTask(todo.type) && editDueAt && { dueAt: editDueAt }),
+      };
+
+      if (notificationData) {
+        updates.notification = {
+          enabled: notificationData.enabled,
+          reminderMinutes: notificationData.reminderMinutes,
+        };
+      }
+
       await updateTodo.mutateAsync({
         id: todo.id,
-        updates: {
-          text: editText.trim(),
-          ...(isOneTimeTask(todo.type) && editDueAt && { dueAt: editDueAt }),
-        },
+        updates,
       });
 
       setIsEditing(false);
@@ -201,9 +233,23 @@ export const useCompletedTodoActions = (todo: Todo, onError?: (error: Error) => 
   const reactivateTodo = useReactivateTodo();
   const deleteTodo = useDeleteTodo();
 
-  const handleReactivate = async (newDueDateTime: string, setIsReactivateFormVisible: (show: boolean) => void, setNewDueDateTime: (dueAt: string) => void) => {
+  const handleReactivate = async (
+    newDueDateTime: string,
+    setIsReactivateFormVisible: (show: boolean) => void,
+    setNewDueDateTime: (dueAt: string) => void,
+    notificationData?: { enabled: boolean; reminderMinutes: number }
+  ) => {
     try {
-      const request = isOneTimeTask(todo.type) && newDueDateTime ? { newDueAt: newDueDateTime } : undefined;
+      let request = undefined;
+      if (isOneTimeTask(todo.type) && newDueDateTime) {
+        request = {
+          newDueAt: newDueDateTime,
+          ...(notificationData && { notification: notificationData })
+        };
+      } else if (notificationData) {
+        request = { notification: notificationData };
+      }
+
       await reactivateTodo.mutateAsync({ id: todo.id, request });
       setIsReactivateFormVisible(false);
       setNewDueDateTime("");
@@ -241,9 +287,23 @@ export const useFailedTodoActions = (todo: Todo, onError?: (error: Error) => voi
   const reactivateTodo = useReactivateTodo();
   const deleteTodo = useDeleteTodo();
 
-  const handleReactivate = async (newDueDateTime: string, setIsReactivateFormVisible: (show: boolean) => void, setNewDueDateTime: (dueAt: string) => void) => {
+  const handleReactivate = async (
+    newDueDateTime: string,
+    setIsReactivateFormVisible: (show: boolean) => void,
+    setNewDueDateTime: (dueAt: string) => void,
+    notificationData?: { enabled: boolean; reminderMinutes: number }
+  ) => {
     try {
-      const request = isOneTimeTask(todo.type) && newDueDateTime ? { newDueAt: newDueDateTime } : undefined;
+      let request = undefined;
+      if (isOneTimeTask(todo.type) && newDueDateTime) {
+        request = {
+          newDueAt: newDueDateTime,
+          ...(notificationData && { notification: notificationData })
+        };
+      } else if (notificationData) {
+        request = { notification: notificationData };
+      }
+
       await reactivateTodo.mutateAsync({ id: todo.id, request });
       setIsReactivateFormVisible(false);
       setNewDueDateTime("");

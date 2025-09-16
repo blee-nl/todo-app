@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import Todo, { ITodo, TaskType, TaskState } from '../models/Todo';
+import { NotificationService } from '../services/NotificationService';
+import { TIME_CONSTANTS, NOTIFICATION_CONSTANTS } from '../constants/timeConstants';
 
 // Custom error class for better error handling
 class TodoValidationError extends Error {
@@ -98,7 +100,7 @@ export const getTodoById = async (req: Request, res: Response): Promise<void> =>
 // Create new todo
 export const createTodo = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { text, type, dueAt } = req.body;
+    const { text, type, dueAt, notification } = req.body;
     
     if (!text || text.trim().length === 0) {
       throw new TodoValidationError('Todo text is required', 400);
@@ -121,6 +123,22 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
       type,
       state: 'pending'
     };
+
+    // Include notification settings if provided
+    if (notification) {
+      let reminderMinutes = NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES;
+
+      if (notification.reminderMinutes &&
+          notification.reminderMinutes >= NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES &&
+          notification.reminderMinutes <= NOTIFICATION_CONSTANTS.MAX_REMINDER_MINUTES) {
+        reminderMinutes = notification.reminderMinutes;
+      }
+
+      todoData.notification = {
+        enabled: notification.enabled,
+        reminderMinutes: reminderMinutes
+      };
+    }
     
     if (type === 'one-time' && dueAt) {
       const dueDate = new Date(dueAt);
@@ -130,9 +148,9 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
       
       // Check if due date is at least 10 minutes from now
       const currentTime = new Date();
-      const minimumDueDateTime = new Date(currentTime.getTime() + 10 * 60 * 1000);
+      const minimumDueDateTime = new Date(currentTime.getTime() + TIME_CONSTANTS.MIN_DUE_DATE_OFFSET_MINUTES * TIME_CONSTANTS.MILLISECONDS_PER_MINUTE);
       if (dueDate < minimumDueDateTime) {
-        throw new TodoValidationError('Due date must be at least 10 minutes from now', 400);
+        throw new TodoValidationError(`Due date must be at least ${TIME_CONSTANTS.MIN_DUE_DATE_OFFSET_MINUTES} minutes from now`, 400);
       }
       
       todoData.dueAt = dueDate;
@@ -170,7 +188,7 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
 export const updateTodo = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { text, dueAt } = req.body;
+    const { text, dueAt, notification } = req.body;
     
     if (!id) {
       throw new TodoValidationError('Todo ID is required', 400);
@@ -196,7 +214,23 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
     }
     
     todo.text = text.trim();
-    
+
+    // Update notification settings if provided
+    if (notification) {
+      let reminderMinutes = NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES;
+
+      if (notification.reminderMinutes &&
+          notification.reminderMinutes >= NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES &&
+          notification.reminderMinutes <= NOTIFICATION_CONSTANTS.MAX_REMINDER_MINUTES) {
+        reminderMinutes = notification.reminderMinutes;
+      }
+
+      todo.notification = {
+        enabled: notification.enabled,
+        reminderMinutes: reminderMinutes
+      };
+    }
+
     // Update dueAt if provided and task is one-time
     if (dueAt && todo.type === 'one-time') {
       const dueDate = new Date(dueAt);
@@ -206,9 +240,9 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       
       // Check if due date is at least 10 minutes from now
       const currentTime = new Date();
-      const minimumDueDateTime = new Date(currentTime.getTime() + 10 * 60 * 1000);
+      const minimumDueDateTime = new Date(currentTime.getTime() + TIME_CONSTANTS.MIN_DUE_DATE_OFFSET_MINUTES * TIME_CONSTANTS.MILLISECONDS_PER_MINUTE);
       if (dueDate < minimumDueDateTime) {
-        throw new TodoValidationError('Due date must be at least 10 minutes from now', 400);
+        throw new TodoValidationError(`Due date must be at least ${TIME_CONSTANTS.MIN_DUE_DATE_OFFSET_MINUTES} minutes from now`, 400);
       }
       
       todo.dueAt = dueDate;
@@ -354,7 +388,7 @@ export const failTodo = async (req: Request, res: Response): Promise<void> => {
 export const reactivateTodo = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { newDueAt } = req.body || {};
+    const { newDueAt, notification } = req.body || {};
     
     if (!id) {
       throw new TodoValidationError('Todo ID is required', 400);
@@ -382,11 +416,11 @@ export const reactivateTodo = async (req: Request, res: Response): Promise<void>
     }
     
     let reactivatedTodo;
-    
+
     if (todo.type === 'one-time' && newDueAt) {
-      reactivatedTodo = await todo.reactivate(new Date(newDueAt));
+      reactivatedTodo = await todo.reactivate(new Date(newDueAt), notification);
     } else {
-      reactivatedTodo = await todo.reactivate();
+      reactivatedTodo = await todo.reactivate(undefined, notification);
     }
     
     res.status(201).json({
@@ -544,6 +578,121 @@ export const processDailyTasks = async (req: Request, res: Response): Promise<vo
     res.status(500).json({
       success: false,
       error: 'Failed to process daily tasks',
+      message: err.message
+    });
+  }
+};
+
+/**
+ * Get tasks ready for notification
+ */
+export const getTasksForNotification = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tasks = await NotificationService.getTasksReadyForNotification();
+
+    const notificationData = tasks.map(task => ({
+      task: {
+        id: task.id,
+        text: task.text,
+        type: task.type,
+        state: task.state,
+        dueAt: task.dueAt,
+        notification: task.notification
+      },
+      notification: NotificationService.createNotificationData(task)
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: tasks.length,
+      data: notificationData
+    });
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get tasks for notification',
+      message: err.message
+    });
+  }
+};
+
+/**
+ * Update notification settings for a task
+ */
+export const updateNotificationSettings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { enabled, reminderMinutes } = req.body;
+
+    // Validation
+    if (typeof enabled !== 'boolean') {
+      res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'enabled field must be a boolean'
+      });
+      return;
+    }
+
+    if (reminderMinutes !== undefined) {
+      if (typeof reminderMinutes !== 'number' || reminderMinutes < 1 || reminderMinutes > 10080) {
+        res.status(400).json({
+          success: false,
+          error: 'Validation Error',
+          message: 'reminderMinutes must be a number between 1 and 10080 (7 days)'
+        });
+        return;
+      }
+    }
+
+    const task = await NotificationService.updateNotificationSettings(id, {
+      enabled,
+      reminderMinutes
+    });
+
+    if (!task) {
+      res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Task not found'
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Notification settings updated successfully',
+      data: task
+    });
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update notification settings',
+      message: err.message
+    });
+  }
+};
+
+/**
+ * Mark task as notified
+ */
+export const markTaskAsNotified = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    await NotificationService.markTaskAsNotified(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Task marked as notified successfully'
+    });
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({
+      success: false,
+      error: 'Failed to mark task as notified',
       message: err.message
     });
   }

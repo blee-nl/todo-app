@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { CONFIG } from '../constants/config';
 import { createAppError, isNetworkError } from '../utils';
+import type { TaskNotificationSettings } from '../types/notification';
 
 // Create axios instance with default config
 export const api = axios.create({
@@ -34,6 +35,13 @@ export type TaskType = 'one-time' | 'daily';
 // Task states
 export type TaskState = 'pending' | 'active' | 'completed' | 'failed';
 
+// Notification interface for API
+export interface TodoNotification {
+  enabled: boolean;
+  reminderMinutes: number;
+  notifiedAt?: string;
+}
+
 // Todo interface
 export interface Todo {
   id: string;
@@ -41,6 +49,7 @@ export interface Todo {
   type: TaskType;
   state: TaskState;
   dueAt?: string; // For one-time tasks
+  notification?: TodoNotification; // Notification settings
   createdAt: string;
   updatedAt: string;
   activatedAt?: string; // When task was moved to active
@@ -55,16 +64,29 @@ export interface CreateTodoRequest {
   text: string;
   type: TaskType;
   dueAt?: string; // Required for one-time tasks
+  notification?: {
+    enabled: boolean;
+    reminderMinutes?: number;
+  };
 }
 
 // Update todo request interface
 export interface UpdateTodoRequest {
   text?: string;
+  dueAt?: string;
+  notification?: {
+    enabled: boolean;
+    reminderMinutes: number;
+  };
 }
 
 // Re-activate todo request interface
 export interface ReactivateTodoRequest {
   newDueAt?: string; // For one-time tasks
+  notification?: {
+    enabled: boolean;
+    reminderMinutes: number;
+  };
 }
 
 // Grouped todos interface
@@ -156,6 +178,24 @@ export const todoApi = {
   deleteFailedTodos: async (): Promise<{ deletedCount: number }> => {
     const response = await api.delete<ApiResponse<{ deletedCount: number }>>('/api/todos/failed');
     return response.data.data;
+  },
+
+  // Notification endpoints
+  getTasksForNotification: async (): Promise<Array<{ task: Todo; notification: TaskNotificationSettings }>> => {
+    const response = await api.get('/api/todos/notifications');
+    return response.data.data;
+  },
+
+  updateNotificationSettings: async (
+    id: string,
+    settings: { enabled: boolean; reminderMinutes?: number }
+  ): Promise<Todo> => {
+    const response = await api.put(`/api/todos/${id}/notification`, settings);
+    return response.data.data;
+  },
+
+  markTaskAsNotified: async (id: string): Promise<void> => {
+    await api.post(`/api/todos/${id}/notification/mark`);
   },
 
 };
