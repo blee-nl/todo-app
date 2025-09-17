@@ -20,8 +20,13 @@ interface FailedTodoItemProps {
 const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
   const [showReactivateForm, setShowReactivateForm] = useState(false);
   const [newDueAt, setNewDueAt] = useState("");
-  const [notificationEnabled, setNotificationEnabled] = useState(todo.notification?.enabled || false);
-  const [reminderMinutes, setReminderMinutes] = useState(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
+  const [notificationEnabled, setNotificationEnabled] = useState(
+    todo.notification?.enabled || false
+  );
+  const [reminderMinutes, setReminderMinutes] = useState(
+    todo.notification?.reminderMinutes ||
+      NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES
+  );
 
   const {
     handleReactivate: reactivateAction,
@@ -37,13 +42,31 @@ const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
       reminderMinutes: reminderMinutes,
     };
 
-    await reactivateAction(newDueAt, setShowReactivateForm, setNewDueAt, notificationData);
+    await reactivateAction(
+      newDueAt,
+      setShowReactivateForm,
+      setNewDueAt,
+      notificationData
+    );
   };
 
   const getMinDate = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 1);
     return now.toISOString().slice(0, 16);
+  };
+
+  const handleShowReactivateForm = () => {
+    setShowReactivateForm(true);
+  };
+
+  const cancelReactivate = () => {
+    handleCancelReactivate(setShowReactivateForm, setNewDueAt);
+    setNotificationEnabled(todo.notification?.enabled || false);
+    setReminderMinutes(
+      todo.notification?.reminderMinutes ||
+        NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES
+    );
   };
 
   const isOverdue = todo.dueAt && new Date(todo.dueAt) < new Date();
@@ -101,7 +124,7 @@ const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
       {!showReactivateForm ? (
         <>
           <ReactivateButton
-            onClick={() => setShowReactivateForm(true)}
+            onClick={handleShowReactivateForm}
             disabled={reactivateTodo.isPending}
             isLoading={reactivateTodo.isPending}
             size="sm"
@@ -151,14 +174,7 @@ const FailedTodoItem: React.FC<FailedTodoItemProps> = ({ todo, onError }) => {
               size="sm"
             />
 
-            <CancelButton
-              onClick={() => {
-                handleCancelReactivate(setShowReactivateForm, setNewDueAt);
-                setNotificationEnabled(todo.notification?.enabled || false);
-                setReminderMinutes(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
-              }}
-              size="sm"
-            />
+            <CancelButton onClick={cancelReactivate} size="sm" />
           </div>
         </div>
       )}

@@ -23,8 +23,13 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
 }) => {
   const [isReactivateFormVisible, setIsReactivateFormVisible] = useState(false);
   const [newDueDateTime, setNewDueDateTime] = useState("");
-  const [notificationEnabled, setNotificationEnabled] = useState(todo.notification?.enabled || false);
-  const [reminderMinutes, setReminderMinutes] = useState(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
+  const [notificationEnabled, setNotificationEnabled] = useState(
+    todo.notification?.enabled || false
+  );
+  const [reminderMinutes, setReminderMinutes] = useState(
+    todo.notification?.reminderMinutes ||
+      NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES
+  );
 
   const {
     handleReactivate: performReactivate,
@@ -52,6 +57,19 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
     const currentTime = new Date();
     currentTime.setMinutes(currentTime.getMinutes() + 1);
     return currentTime.toISOString().slice(0, 16);
+  };
+
+  const showReactivateForm = () => {
+    setIsReactivateFormVisible(true);
+  };
+
+  const cancelReactivate = () => {
+    handleCancelReactivate(setIsReactivateFormVisible, setNewDueDateTime);
+    setNotificationEnabled(todo.notification?.enabled || false);
+    setReminderMinutes(
+      todo.notification?.reminderMinutes ||
+        NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES
+    );
   };
 
   const badges = [
@@ -107,7 +125,7 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
       {!isReactivateFormVisible ? (
         <>
           <ReactivateButton
-            onClick={() => setIsReactivateFormVisible(true)}
+            onClick={showReactivateForm}
             disabled={reactivateTodo.isPending}
             isLoading={reactivateTodo.isPending}
             size="sm"
@@ -156,17 +174,7 @@ const CompletedTodoItem: React.FC<CompletedTodoItemProps> = ({
               size="sm"
             />
 
-            <CancelButton
-              onClick={() => {
-                handleCancelReactivate(
-                  setIsReactivateFormVisible,
-                  setNewDueDateTime
-                );
-                setNotificationEnabled(todo.notification?.enabled || false);
-                setReminderMinutes(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
-              }}
-              size="sm"
-            />
+            <CancelButton onClick={cancelReactivate} size="sm" />
           </div>
         </div>
       )}

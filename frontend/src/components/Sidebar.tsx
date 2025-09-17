@@ -9,7 +9,10 @@ import {
 } from "@heroicons/react/24/outline";
 import type { TaskState, GroupedTodos } from "../services/api";
 import { Text, Heading, Button } from "../design-system";
-import { TaskState as TaskStateConstants, TASK_STATE_CONFIG } from "../constants/taskConstants";
+import {
+  TaskState as TaskStateConstants,
+  TASK_STATE_CONFIG,
+} from "../constants/taskConstants";
 
 interface SidebarProps {
   selectedState: TaskState;
@@ -63,6 +66,10 @@ const Sidebar: React.FC<SidebarProps> = ({
     todos.completed.length +
     todos.failed.length;
 
+  const handleStateChange = (state: TaskState) => {
+    onStateChange(state);
+  };
+
   return (
     <div className="hidden lg:flex lg:w-64 bg-white border-r border-gray-200 flex-col fixed left-0 top-0 h-screen z-20">
       {/* App Logo/Name */}
@@ -86,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {navigationItems.map((item) => (
             <Button
               key={item.state}
-              onClick={() => onStateChange(item.state)}
+              onClick={() => handleStateChange(item.state)}
               variant="ghost"
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 ${
                 selectedState === item.state

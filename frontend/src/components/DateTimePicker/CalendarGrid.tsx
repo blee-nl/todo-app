@@ -10,6 +10,12 @@ interface CalendarGridProps {
 }
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ days, onDateSelect }) => {
+  const handleDateSelect = (day: CalendarDay) => {
+    if (!day.isDisabled) {
+      onDateSelect(day.date);
+    }
+  };
+
   return (
     <div className="grid grid-cols-7 gap-1 mb-4">
       {/* Week day headers */}
@@ -28,7 +34,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ days, onDateSelect }) => {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => !day.isDisabled && onDateSelect(day.date)}
+          onClick={() => handleDateSelect(day)}
           disabled={day.isDisabled}
           className={getDateButtonClasses(day)}
           aria-label={ARIA_LABELS.SELECT_DATE}

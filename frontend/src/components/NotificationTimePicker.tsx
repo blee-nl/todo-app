@@ -1,7 +1,10 @@
 import React, { useState, useCallback } from "react";
 import { Label, Button } from "../design-system";
 import { BellIcon } from "../assets/icons";
-import { REMINDER_PRESETS, NOTIFICATION_CONSTANTS } from "../constants/notificationConstants";
+import {
+  REMINDER_PRESETS,
+  NOTIFICATION_CONSTANTS,
+} from "../constants/notificationConstants";
 import { TIME_CONSTANTS } from "../constants/timeConstants";
 
 export interface NotificationTimePickerProps {
@@ -11,9 +14,8 @@ export interface NotificationTimePickerProps {
   onReminderMinutesChange: (minutes: number) => void;
   className?: string;
   dueAt?: string;
-  taskType?: 'one-time' | 'daily';
+  taskType?: "one-time" | "daily";
 }
-
 
 const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
   enabled,
@@ -22,7 +24,7 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
   onReminderMinutesChange,
   className = "",
   dueAt,
-  taskType = 'one-time',
+  taskType = "one-time",
 }) => {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
@@ -36,61 +38,107 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
 
     const now = new Date();
     const dueDate = new Date(dueAt);
-    const timeDiffMinutes = Math.floor((dueDate.getTime() - now.getTime()) / TIME_CONSTANTS.MILLISECONDS_PER_MINUTE);
+    const timeDiffMinutes = Math.floor(
+      (dueDate.getTime() - now.getTime()) /
+        TIME_CONSTANTS.MILLISECONDS_PER_MINUTE
+    );
 
-    if (taskType === 'daily') {
+    if (taskType === "daily") {
       // For daily tasks, max reminder is time until next occurrence (usually 24 hours max)
       return Math.min(timeDiffMinutes, NOTIFICATION_CONSTANTS.MINUTES_PER_DAY);
     } else {
       // For one-time tasks, max reminder is time until due date
-      return Math.max(NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES, Math.min(timeDiffMinutes, NOTIFICATION_CONSTANTS.MAX_REMINDER_MINUTES));
+      return Math.max(
+        NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES,
+        Math.min(timeDiffMinutes, NOTIFICATION_CONSTANTS.MAX_REMINDER_MINUTES)
+      );
     }
   }, [dueAt, taskType]);
 
   const maxReminderMinutes = getMaxReminderMinutes();
 
+  const showCustomTimeInput = () => {
+    setShowCustomInput(true);
+  };
+
   // Filter preset options based on available time until due date
-  const availablePresets = REMINDER_PRESETS.filter(preset => preset.value <= maxReminderMinutes);
+  const availablePresets = REMINDER_PRESETS.filter(
+    (preset) => preset.value <= maxReminderMinutes
+  );
 
   // Check if current reminder time is still valid
   const isCurrentReminderValid = reminderMinutes <= maxReminderMinutes;
-  const isPresetOption = availablePresets.find(option => option.value === reminderMinutes);
+  const isPresetOption = availablePresets.find(
+    (option) => option.value === reminderMinutes
+  );
   const isCustomTime = !isPresetOption && isCurrentReminderValid;
 
   // Auto-adjust invalid reminder time to the maximum available preset
   React.useEffect(() => {
     if (!isCurrentReminderValid) {
       if (availablePresets.length > 0) {
-        const maxAvailablePreset = availablePresets[availablePresets.length - 1];
+        const maxAvailablePreset =
+          availablePresets[availablePresets.length - 1];
         onReminderMinutesChange(maxAvailablePreset.value);
-      } else if (maxReminderMinutes >= NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES) {
+      } else if (
+        maxReminderMinutes >= NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES
+      ) {
         // No presets available, but we can still set a valid custom time
-        onReminderMinutesChange(Math.min(maxReminderMinutes, NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES));
+        onReminderMinutesChange(
+          Math.min(
+            maxReminderMinutes,
+            NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES
+          )
+        );
       }
     }
-  }, [isCurrentReminderValid, availablePresets, maxReminderMinutes, onReminderMinutesChange]);
+  }, [
+    isCurrentReminderValid,
+    availablePresets,
+    maxReminderMinutes,
+    onReminderMinutesChange,
+  ]);
 
   const handleEnabledToggle = useCallback(() => {
     onEnabledChange(!enabled);
   }, [enabled, onEnabledChange]);
 
-  const handlePresetChange = useCallback((value: number) => {
-    onReminderMinutesChange(value);
-    setShowCustomInput(false);
-  }, [onReminderMinutesChange]);
+  const handlePresetChange = useCallback(
+    (value: number) => {
+      onReminderMinutesChange(value);
+      setShowCustomInput(false);
+    },
+    [onReminderMinutesChange]
+  );
 
   const handleCustomSubmit = useCallback(() => {
     const value = parseInt(customValue);
     if (isNaN(value) || value <= 0) return;
 
-    const minutes = customUnit === "hours" ? value * NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR : value;
+    const minutes =
+      customUnit === "hours"
+        ? value * NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR
+        : value;
 
     // Validate range based on due date and task type
-    if (minutes < NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES || minutes > maxReminderMinutes) {
-      const maxDays = Math.floor(maxReminderMinutes / NOTIFICATION_CONSTANTS.MINUTES_PER_DAY);
-      const maxHours = Math.floor(maxReminderMinutes / NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR);
+    if (
+      minutes < NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES ||
+      minutes > maxReminderMinutes
+    ) {
+      const maxDays = Math.floor(
+        maxReminderMinutes / NOTIFICATION_CONSTANTS.MINUTES_PER_DAY
+      );
+      const maxHours = Math.floor(
+        maxReminderMinutes / NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR
+      );
       const displayMax = maxDays > 0 ? `${maxDays} days` : `${maxHours} hours`;
-      alert(`Reminder time must be between ${NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES} minute and ${displayMax} (based on ${taskType === 'daily' ? 'daily schedule' : 'due date'})`);
+      alert(
+        `Reminder time must be between ${
+          NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES
+        } minute and ${displayMax} (based on ${
+          taskType === "daily" ? "daily schedule" : "due date"
+        })`
+      );
       return;
     }
 
@@ -104,32 +152,40 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
     setShowCustomInput(false);
   }, []);
 
-  const handlePresetSelectChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (value === 'custom') {
-      setShowCustomInput(true);
-    } else {
-      handlePresetChange(parseInt(value));
-    }
-  }, [handlePresetChange]);
-
+  const handlePresetSelectChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (value === "custom") {
+        setShowCustomInput(true);
+      } else {
+        handlePresetChange(parseInt(value));
+      }
+    },
+    [handlePresetChange]
+  );
 
   const formatCustomTime = (minutes: number): string => {
     if (minutes < NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR) {
       return `${minutes} minutes before`;
     } else if (minutes < NOTIFICATION_CONSTANTS.MINUTES_PER_DAY) {
-      const hours = Math.floor(minutes / NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR);
-      const remainingMinutes = minutes % NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR;
+      const hours = Math.floor(
+        minutes / NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR
+      );
+      const remainingMinutes =
+        minutes % NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR;
       if (remainingMinutes === 0) {
-        return `${hours} hour${hours > 1 ? 's' : ''} before`;
+        return `${hours} hour${hours > 1 ? "s" : ""} before`;
       } else {
         return `${hours}h ${remainingMinutes}m before`;
       }
     } else {
       const days = Math.floor(minutes / NOTIFICATION_CONSTANTS.MINUTES_PER_DAY);
-      const remainingHours = Math.floor((minutes % NOTIFICATION_CONSTANTS.MINUTES_PER_DAY) / NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR);
+      const remainingHours = Math.floor(
+        (minutes % NOTIFICATION_CONSTANTS.MINUTES_PER_DAY) /
+          NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR
+      );
       if (remainingHours === 0) {
-        return `${days} day${days > 1 ? 's' : ''} before`;
+        return `${days} day${days > 1 ? "s" : ""} before`;
       } else {
         return `${days}d ${remainingHours}h before`;
       }
@@ -158,7 +214,8 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
             </Label>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Get notified before your task is due. Your browser will ask for permission first.
+            Get notified before your task is due. Your browser will ask for
+            permission first.
           </p>
         </div>
       </div>
@@ -176,7 +233,7 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
               <div className="space-y-2">
                 {availablePresets.length > 0 ? (
                   <select
-                    value={isCustomTime ? 'custom' : reminderMinutes.toString()}
+                    value={isCustomTime ? "custom" : reminderMinutes.toString()}
                     onChange={handlePresetSelectChange}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
@@ -196,11 +253,12 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
                   <div className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-md p-2">
                     <p>No preset options available for this due date.</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Task is due too soon. Use custom time or adjust the due date.
+                      Task is due too soon. Use custom time or adjust the due
+                      date.
                     </p>
                     <button
                       type="button"
-                      onClick={() => setShowCustomInput(true)}
+                      onClick={showCustomTimeInput}
                       className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-1"
                     >
                       Set custom time →
@@ -222,13 +280,22 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
                   onChange={(e) => setCustomValue(e.target.value)}
                   placeholder="Enter time"
                   min={NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES.toString()}
-                  max={customUnit === "minutes" ? maxReminderMinutes.toString() : Math.floor(maxReminderMinutes / NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR).toString()}
+                  max={
+                    customUnit === "minutes"
+                      ? maxReminderMinutes.toString()
+                      : Math.floor(
+                          maxReminderMinutes /
+                            NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR
+                        ).toString()
+                  }
                   className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                 />
                 <select
                   value={customUnit}
-                  onChange={(e) => setCustomUnit(e.target.value as "minutes" | "hours")}
+                  onChange={(e) =>
+                    setCustomUnit(e.target.value as "minutes" | "hours")
+                  }
                   className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="minutes">minutes</option>
@@ -257,7 +324,21 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
               </div>
 
               <p className="text-xs text-gray-500">
-                Allowed range: {NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES} minute to {Math.floor(maxReminderMinutes / NOTIFICATION_CONSTANTS.MINUTES_PER_DAY) > 0 ? `${Math.floor(maxReminderMinutes / NOTIFICATION_CONSTANTS.MINUTES_PER_DAY)} days` : `${Math.floor(maxReminderMinutes / NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR)} hours`} (based on {taskType === 'daily' ? 'daily schedule' : 'due date'})
+                Allowed range: {NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES}{" "}
+                minute to{" "}
+                {Math.floor(
+                  maxReminderMinutes / NOTIFICATION_CONSTANTS.MINUTES_PER_DAY
+                ) > 0
+                  ? `${Math.floor(
+                      maxReminderMinutes /
+                        NOTIFICATION_CONSTANTS.MINUTES_PER_DAY
+                    )} days`
+                  : `${Math.floor(
+                      maxReminderMinutes /
+                        NOTIFICATION_CONSTANTS.MINUTES_PER_HOUR
+                    )} hours`}{" "}
+                (based on {taskType === "daily" ? "daily schedule" : "due date"}
+                )
               </p>
             </div>
           )}

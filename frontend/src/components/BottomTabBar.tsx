@@ -6,7 +6,10 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import type { TaskState } from "../services/api";
-import { TaskState as TaskStateConstants, TASK_STATE_CONFIG } from "../constants/taskConstants";
+import {
+  TaskState as TaskStateConstants,
+  TASK_STATE_CONFIG,
+} from "../constants/taskConstants";
 
 interface BottomTabBarProps {
   selectedState: TaskState;
@@ -17,6 +20,9 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
   selectedState,
   onStateChange,
 }) => {
+  const handleStateChange = (state: TaskState) => {
+    onStateChange(state);
+  };
   const tabs = [
     {
       state: TaskStateConstants.PENDING,
@@ -46,7 +52,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
         {tabs.map((tab) => (
           <button
             key={tab.state}
-            onClick={() => onStateChange(tab.state)}
+            onClick={() => handleStateChange(tab.state)}
             className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${
               selectedState === tab.state
                 ? "text-blue-600 bg-blue-50 shadow-md scale-105"
