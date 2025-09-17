@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import TaskModal from "../TaskModal";
+import { TaskType } from "../../constants/taskConstants";
 
 // Mock the useCreateTodo hook
 vi.mock("../../hooks/useTodos", () => ({
@@ -51,7 +52,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={false}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -65,7 +66,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -79,7 +80,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -95,7 +96,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -112,7 +113,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -127,7 +128,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="daily"
+        taskType={TaskType.DAILY}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -141,7 +142,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -150,7 +151,7 @@ describe("TaskModal", () => {
     const dailyButton = screen.getByText("Daily");
     fireEvent.click(dailyButton);
 
-    expect(mockSetTaskType).toHaveBeenCalledWith("daily");
+    expect(mockSetTaskType).toHaveBeenCalledWith(TaskType.DAILY);
   });
 
   it("should call onClose when close button is clicked", () => {
@@ -158,7 +159,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -175,7 +176,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -192,7 +193,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -209,7 +210,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -226,7 +227,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -241,7 +242,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }
@@ -259,7 +260,7 @@ describe("TaskModal", () => {
       <TaskModal
         isOpen={true}
         onClose={mockOnClose}
-        taskType="one-time"
+        taskType={TaskType.ONE_TIME}
         setTaskType={mockSetTaskType}
       />,
       { wrapper: createWrapper() }

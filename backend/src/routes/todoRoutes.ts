@@ -13,7 +13,10 @@ import {
   deleteCompletedTodos,
   deleteFailedTodos,
   processOverdueTasks,
-  processDailyTasks
+  processDailyTasks,
+  getTasksForNotification,
+  updateNotificationSettings,
+  markTaskAsNotified
 } from '../controllers/todoController';
 import { validateTodo, validateId } from '../middleware/validation';
 
@@ -91,6 +94,15 @@ router.get('/', getAllTodos);
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.get('/state/:state', getTodosByState);
+
+// DELETE /api/todos/completed - Delete all completed todos
+router.delete('/completed', deleteCompletedTodos);
+
+// DELETE /api/todos/failed - Delete all failed todos
+router.delete('/failed', deleteFailedTodos);
+
+// GET /api/todos/notifications - Get tasks ready for notification
+router.get('/notifications', getTasksForNotification);
 
 /**
  * @swagger
@@ -312,16 +324,16 @@ router.patch('/:id/reactivate', validateId, reactivateTodo);
  */
 router.delete('/:id', validateId, deleteTodo);
 
-// DELETE /api/todos/completed - Delete all completed todos
-router.delete('/completed', deleteCompletedTodos);
-
-// DELETE /api/todos/failed - Delete all failed todos
-router.delete('/failed', deleteFailedTodos);
-
 // POST /api/todos/process/overdue - Process overdue tasks (cron job)
 router.post('/process/overdue', processOverdueTasks);
 
 // POST /api/todos/process/daily - Process daily tasks (cron job)
 router.post('/process/daily', processDailyTasks);
+
+// PUT /api/todos/:id/notification - Update notification settings
+router.put('/:id/notification', validateId, updateNotificationSettings);
+
+// POST /api/todos/:id/notification/mark - Mark task as notified
+router.post('/:id/notification/mark', validateId, markTaskAsNotified);
 
 export default router;

@@ -50,19 +50,19 @@ describe('validation', () => {
     })
 
     it('should return invalid for null ID', () => {
-      const result = validateTodoId(null as any)
+      const result = validateTodoId(null as unknown as string)
       expect(result.isValid).toBe(false)
       expect(result.error).toBe('Invalid todo ID')
     })
 
     it('should return invalid for undefined ID', () => {
-      const result = validateTodoId(undefined as any)
+      const result = validateTodoId(undefined as unknown as string)
       expect(result.isValid).toBe(false)
       expect(result.error).toBe('Invalid todo ID')
     })
 
     it('should return invalid for non-string ID', () => {
-      const result = validateTodoId(123 as any)
+      const result = validateTodoId(123 as unknown as string)
       expect(result.isValid).toBe(false)
       expect(result.error).toBe('Invalid todo ID')
     })

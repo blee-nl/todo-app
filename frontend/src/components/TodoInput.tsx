@@ -4,6 +4,12 @@ import type { TaskType } from "../services/api";
 import CustomDateTimePicker from "./CustomDateTimePicker";
 import { Button, Input, Label, Text } from "../design-system";
 import { PlusIcon } from "../assets/icons";
+import {
+  LoadingText,
+  TASK_TYPE_CONFIG,
+  isOneTimeTask,
+  getTaskPlaceholder,
+} from "../constants/taskConstants";
 
 interface TodoInputProps {
   taskType: TaskType;
@@ -11,9 +17,9 @@ interface TodoInputProps {
 }
 
 const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
-  const [text, setText] = useState("");
-  const [dueAt, setDueAt] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [taskText, setTaskText] = useState("");
+  const [dueDateTime, setDueDateTime] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const createTodo = useCreateTodo();
 
@@ -21,28 +27,28 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      if (!text.trim()) return;
+      if (!taskText.trim()) return;
 
-      setIsLoading(true);
+      setIsCreating(true);
 
       try {
         const todoData = {
-          text: text.trim(),
+          text: taskText.trim(),
           type: taskType,
-          ...(taskType === "one-time" && dueAt && { dueAt }),
+          ...(isOneTimeTaskType && dueDateTime && { dueAt: dueDateTime }),
         };
 
         await createTodo.mutateAsync(todoData);
-        setText("");
-        setDueAt("");
+        setTaskText("");
+        setDueDateTime("");
       } catch (error) {
         console.error("Failed to create todo:", error);
         onError?.(error as Error);
       } finally {
-        setIsLoading(false);
+        setIsCreating(false);
       }
     },
-    [text, taskType, dueAt, createTodo, onError]
+    [taskText, taskType, dueDateTime, createTodo, onError]
   );
 
   const handleKeyDown = useCallback(
@@ -55,11 +61,21 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
     [handleSubmit]
   );
 
-  const getMinDate = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 1); // At least 1 minute in the future
-    return now.toISOString().slice(0, 16);
+  const handleTaskTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTaskText(e.target.value);
+  }, []);
+
+  const getMinimumDateTime = () => {
+    const currentTime = new Date();
+    currentTime.setMinutes(currentTime.getMinutes() + 1); // At least 1 minute in the future
+    return currentTime.toISOString().slice(0, 16);
   };
+
+  // Calculate derived state
+  const isOneTimeTaskType = isOneTimeTask(taskType);
+  const isSubmitDisabled = isCreating ||
+    !taskText.trim() ||
+    (isOneTimeTaskType && !dueDateTime);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -76,33 +92,31 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
         <div>
           <Input
             type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
+            value={taskText}
+            onChange={handleTaskTextChange}
             onKeyDown={handleKeyDown}
-            placeholder={`What ${
-              taskType === "one-time" ? "task" : "habit"
-            } needs to be done?`}
-            disabled={isLoading}
+            placeholder={getTaskPlaceholder(taskType)}
+            disabled={isCreating}
             maxLength={500}
           />
           <div className="text-right mt-1">
             <Text variant="muted" className="text-sm">
-              {text.length}/500
+              {taskText.length}/500
             </Text>
           </div>
         </div>
 
-        {taskType === "one-time" && (
+        {isOneTimeTaskType && (
           <div>
             <Label htmlFor="due-date" className="mb-2">
               Due Date & Time
             </Label>
             <CustomDateTimePicker
               id="due-date"
-              value={dueAt}
-              onChange={setDueAt}
-              min={getMinDate()}
-              disabled={isLoading}
+              value={dueDateTime}
+              onChange={setDueDateTime}
+              min={getMinimumDateTime()}
+              disabled={isCreating}
               placeholder="Select due date and time"
             />
           </div>
@@ -110,22 +124,18 @@ const TodoInput: React.FC<TodoInputProps> = ({ taskType, onError }) => {
 
         <div className="flex items-center justify-between">
           <Text variant="muted" className="text-sm">
-            {taskType === "one-time"
-              ? "One-time tasks have a specific deadline"
-              : "Daily tasks repeat every day at midnight"}
+            {TASK_TYPE_CONFIG[taskType].description}
           </Text>
 
           <Button
             type="submit"
-            disabled={
-              isLoading || !text.trim() || (taskType === "one-time" && !dueAt)
-            }
+            disabled={isSubmitDisabled}
             variant="primary"
             size="md"
-            isLoading={isLoading}
+            isLoading={isCreating}
             leftIcon={<PlusIcon size="sm" />}
           >
-            {isLoading ? "Adding..." : "Add Task"}
+            {isCreating ? LoadingText.ADDING : LoadingText.ADD_TASK}
           </Button>
         </div>
       </form>

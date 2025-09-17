@@ -3,8 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import type { Todo } from "../../../services/api";
 import {
-  useTaskListActions,
-  usePendingTodoActions,
+  useTaskListBulkActions,
+  usePendingTaskActions,
   useActiveTodoActions,
   useCompletedTodoActions,
   useFailedTodoActions,
@@ -81,58 +81,58 @@ describe("TaskActions", () => {
     vi.restoreAllMocks();
   });
 
-  describe("useTaskListActions", () => {
+  describe("useTaskListBulkActions", () => {
     it("should return handleDeleteAll function and loading state for completed tasks", () => {
       const mockOnError = vi.fn();
       const { result } = renderHook(
-        () => useTaskListActions("completed", mockOnError),
+        () => useTaskListBulkActions("completed", mockOnError),
         { wrapper: createWrapper() }
       );
 
-      expect(result.current.handleDeleteAll).toBeDefined();
-      expect(result.current.isDeleteAllLoading).toBe(false);
+      expect(result.current.deleteAllTasksInCurrentState).toBeDefined();
+      expect(result.current.isDeletingAllTasks).toBe(false);
     });
 
     it("should return handleDeleteAll function and loading state for failed tasks", () => {
       const mockOnError = vi.fn();
       const { result } = renderHook(
-        () => useTaskListActions("failed", mockOnError),
+        () => useTaskListBulkActions("failed", mockOnError),
         { wrapper: createWrapper() }
       );
 
-      expect(result.current.handleDeleteAll).toBeDefined();
-      expect(result.current.isDeleteAllLoading).toBe(false);
+      expect(result.current.deleteAllTasksInCurrentState).toBeDefined();
+      expect(result.current.isDeletingAllTasks).toBe(false);
     });
   });
 
-  describe("usePendingTodoActions", () => {
+  describe("usePendingTaskActions", () => {
     it("should return all pending todo action functions", () => {
       const mockOnError = vi.fn();
       const { result } = renderHook(
-        () => usePendingTodoActions(mockTodo, mockOnError),
+        () => usePendingTaskActions(mockTodo, mockOnError),
         { wrapper: createWrapper() }
       );
 
-      expect(result.current.handleActivate).toBeDefined();
-      expect(result.current.handleDelete).toBeDefined();
-      expect(result.current.handleSave).toBeDefined();
-      expect(result.current.handleCancel).toBeDefined();
-      expect(result.current.handleKeyDown).toBeDefined();
-      expect(result.current.activateTodo).toBeDefined();
-      expect(result.current.deleteTodo).toBeDefined();
-      expect(result.current.updateTodo).toBeDefined();
+      expect(result.current.activateTask).toBeDefined();
+      expect(result.current.deleteTask).toBeDefined();
+      expect(result.current.saveTaskEdits).toBeDefined();
+      expect(result.current.cancelTaskEdits).toBeDefined();
+      expect(result.current.handleTaskEditKeyDown).toBeDefined();
+      expect(result.current.activateTaskMutation).toBeDefined();
+      expect(result.current.deleteTaskMutation).toBeDefined();
+      expect(result.current.updateTaskMutation).toBeDefined();
     });
 
     it("should handle save action with proper parameters", async () => {
       const mockOnError = vi.fn();
       const mockSetIsEditing = vi.fn();
       const { result } = renderHook(
-        () => usePendingTodoActions(mockTodo, mockOnError),
+        () => usePendingTaskActions(mockTodo, mockOnError),
         { wrapper: createWrapper() }
       );
 
       await act(async () => {
-        await result.current.handleSave(
+        await result.current.saveTaskEdits(
           "New text",
           "2024-01-02T10:00:00.000Z",
           mockSetIsEditing
@@ -148,12 +148,12 @@ describe("TaskActions", () => {
       const mockSetEditDueAt = vi.fn();
       const mockSetIsEditing = vi.fn();
       const { result } = renderHook(
-        () => usePendingTodoActions(mockTodo, mockOnError),
+        () => usePendingTaskActions(mockTodo, mockOnError),
         { wrapper: createWrapper() }
       );
 
       act(() => {
-        result.current.handleCancel(
+        result.current.cancelTaskEdits(
           mockSetEditText,
           mockSetEditDueAt,
           mockSetIsEditing
@@ -170,7 +170,7 @@ describe("TaskActions", () => {
       const mockHandleSave = vi.fn();
       const mockHandleCancel = vi.fn();
       const { result } = renderHook(
-        () => usePendingTodoActions(mockTodo, mockOnError),
+        () => usePendingTaskActions(mockTodo, mockOnError),
         { wrapper: createWrapper() }
       );
 
@@ -178,16 +178,16 @@ describe("TaskActions", () => {
       const escapeEvent = new KeyboardEvent("keydown", { key: "Escape" });
 
       act(() => {
-        result.current.handleKeyDown(
-          enterEvent as any,
+        result.current.handleTaskEditKeyDown(
+          enterEvent as unknown as React.KeyboardEvent<HTMLElement>,
           mockHandleSave,
           mockHandleCancel
         );
       });
 
       act(() => {
-        result.current.handleKeyDown(
-          escapeEvent as any,
+        result.current.handleTaskEditKeyDown(
+          escapeEvent as unknown as React.KeyboardEvent<HTMLElement>,
           mockHandleSave,
           mockHandleCancel
         );

@@ -13,37 +13,40 @@ const mockDeleteTodo = vi.fn();
 const mockUpdateTodo = vi.fn();
 
 vi.mock("../actions/TaskActions", () => ({
-  usePendingTodoActions: (_todo: Todo, onError?: (error: Error) => void) => ({
-    handleActivate: async () => {
+  usePendingTaskActions: (_todo: Todo, onError?: (error: Error) => void) => ({
+    activateTask: async () => {
       try {
         await mockActivateTodo();
       } catch (error) {
         onError?.(error as Error);
       }
     },
-    handleDelete: async () => {
+    deleteTask: async () => {
       try {
         await mockDeleteTodo();
       } catch (error) {
         onError?.(error as Error);
       }
     },
-    handleSave: async (
+    saveTaskEdits: async (
       _editText: string,
       _editDueAt: string,
       _setIsEditing: (editing: boolean) => void
     ) => {
+      void _editText;
+      void _editDueAt;
+      void _setIsEditing;
       try {
         await mockUpdateTodo();
       } catch (error) {
         onError?.(error as Error);
       }
     },
-    handleCancel: mockHandleCancel,
-    handleKeyDown: mockHandleKeyDown,
-    activateTodo: { mutateAsync: mockActivateTodo, isPending: false },
-    deleteTodo: { mutateAsync: mockDeleteTodo, isPending: false },
-    updateTodo: { mutateAsync: mockUpdateTodo, isPending: false },
+    cancelTaskEdits: mockHandleCancel,
+    handleTaskEditKeyDown: mockHandleKeyDown,
+    activateTaskMutation: { mutateAsync: mockActivateTodo, isPending: false },
+    deleteTaskMutation: { mutateAsync: mockDeleteTodo, isPending: false },
+    updateTaskMutation: { mutateAsync: mockUpdateTodo, isPending: false },
   }),
 }));
 

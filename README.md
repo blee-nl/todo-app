@@ -7,12 +7,14 @@ A modern, full-stack todo application built with React, TypeScript, Node.js, and
 ### ✨ Core Functionality
 - **Task Types**: Support for `one-time` and `daily` tasks
 - **Task States**: Four categories - Pending, Active, Completed, Failed
-- **Add Todos**: Create new tasks with due dates for one-time tasks
+- **Smart Notifications**: Browser notifications with customizable reminder times (5 minutes to 7 days)
+- **Add Todos**: Create new tasks with due dates and optional notification settings
 - **Edit Todos**: Inline editing for both pending and active tasks (text and date)
 - **Delete Todos**: Remove individual todos or bulk delete completed/failed ones
 - **Mark Complete**: Move active tasks to completed state
 - **Re-activation**: Re-activate completed or failed tasks with new due dates
 - **Auto-navigation**: Automatically switch to pending list after creating new tasks
+- **Notification Management**: Permission handling, scheduling, and browser API integration
 
 ### 🎨 User Interface
 - **iOS Reminders-inspired Design**: Clean, modern interface with rounded cards
@@ -36,11 +38,13 @@ A modern, full-stack todo application built with React, TypeScript, Node.js, and
 
 ### 🔧 Technical Features
 - **TypeScript**: Full type safety across frontend and backend
+- **Clean Architecture**: Domain-driven design with clear separation of concerns
 - **React Query (TanStack Query)**: Efficient data fetching and caching
+- **Browser Notifications API**: Native browser notifications with service worker support
 - **Error Handling**: Comprehensive error management with user feedback
 - **Input Validation**: Client and server-side validation
 - **Rate Limiting**: API protection against abuse
-- **Testing**: 70% test coverage with Jest and React Testing Library (270 tests passing)
+- **Testing**: Extensive test coverage with Jest and React Testing Library (1576+ tests passing)
 - **Responsive Design**: Mobile-first approach with desktop enhancements
 - **Custom CSS**: Tailwind CSS + custom styles for enhanced UI
 - **API Documentation**: Complete Swagger/OpenAPI documentation at `/api/docs`
@@ -49,6 +53,7 @@ A modern, full-stack todo application built with React, TypeScript, Node.js, and
 - **Centralized Actions**: Task actions centralized in custom hooks for better maintainability
 - **Custom Icons**: Optimized SVG icon system with size variants
 - **Performance Optimization**: Memoized components and efficient state management
+- **Dependency Injection**: Service container for better testability and maintainability
 
 ## 🖥️ Demo Screenshots
 
@@ -138,19 +143,32 @@ A modern, full-stack todo application built with React, TypeScript, Node.js, and
 todo-app/
 ├── frontend/                 # React TypeScript frontend
 │   ├── src/
-│   │   ├── components/       # React components
+│   │   ├── components/       # React components (UI layer)
+│   │   ├── domain/          # Domain layer (Clean Architecture)
+│   │   │   ├── entities/    # Domain entities
+│   │   │   ├── repositories/ # Repository interfaces
+│   │   │   └── services/    # Domain services
+│   │   ├── application/     # Application layer (Use cases)
+│   │   ├── infrastructure/  # Infrastructure layer (External concerns)
+│   │   ├── features/        # Feature modules
 │   │   ├── hooks/           # Custom React hooks
-│   │   ├── services/        # API services
+│   │   ├── services/        # Infrastructure services
 │   │   ├── utils/           # Utility functions
+│   │   ├── constants/       # Configuration constants
+│   │   ├── types/           # TypeScript type definitions
 │   │   └── test/            # Test utilities
 │   ├── public/              # Static assets
 │   └── package.json
 ├── backend/                 # Node.js TypeScript backend
 │   ├── src/
 │   │   ├── controllers/     # Request handlers
+│   │   ├── services/        # Business logic services
 │   │   ├── middleware/      # Custom middleware
 │   │   ├── models/          # Mongoose models
 │   │   ├── routes/          # API routes
+│   │   ├── config/          # Configuration
+│   │   ├── constants/       # Application constants
+│   │   ├── utils/           # Utility functions
 │   │   └── test/            # Test setup and utilities
 │   └── package.json
 └── README.md
@@ -162,8 +180,12 @@ todo-app/
 1. Click the "Add Task" button or floating action button
 2. Select task type (one-time or daily)
 3. For one-time tasks, set a due date using the calendar picker
-4. Enter your task description
-5. Click "Add Task" to create
+4. Configure notification settings (optional):
+   - Enable/disable notifications
+   - Choose reminder time (5 minutes to 7 days before due)
+   - Use preset times or set custom reminder
+5. Enter your task description
+6. Click "Add Task" to create
 
 ### Task States
 - **Pending**: Newly created tasks waiting to be activated
@@ -182,6 +204,14 @@ todo-app/
 - **Desktop**: Use the left sidebar to switch between task categories
 - **Mobile**: Use the bottom tab bar to navigate between lists
 - **Statistics**: View task counts and timezone information in the sidebar
+
+### Notification Features
+- **Browser Permissions**: Request notification permissions on first use
+- **Smart Scheduling**: Automatically schedule reminders based on due dates
+- **Customizable Timing**: Choose from preset times (5min, 15min, 1hr, 1day, etc.) or set custom
+- **Permission Management**: Clear permission status indicators and re-request options
+- **Service Worker Support**: Uses service workers for reliable notification delivery
+- **Fallback Handling**: Graceful degradation for unsupported browsers
 
 ### Viewing Timestamps
 - **Created**: When the task was first created
@@ -232,8 +262,16 @@ pnpm test:watch        # Watch mode
 ```
 
 ### Test Coverage
-- **Frontend**: 100% coverage with React Testing Library (270 tests passing)
-- **Backend**: Comprehensive Jest test suite with MongoDB Memory Server
+- **Frontend**: Extensive coverage with React Testing Library (1365+ tests passing)
+  - React components with notification features
+  - Clean architecture layers (domain, application, infrastructure)
+  - Custom hooks including notification hooks
+  - Browser API integration and permission handling
+- **Backend**: Comprehensive Jest test suite (211+ tests passing)
+  - MongoDB Memory Server for isolated testing
+  - Notification service layer testing
+  - Model validation with notification support
+  - API endpoint integration testing
 
 ## 🛠️ Development
 

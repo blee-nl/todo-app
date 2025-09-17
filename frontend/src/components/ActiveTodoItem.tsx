@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import type { Todo } from "../services/api";
 import CustomDateTimePicker from "./CustomDateTimePicker";
 import { Input } from "../design-system";
-import { ToDoListItem } from "./ToDoListItem";
+import TodoListItem from "./TodoListItem";
 import { useActiveTodoActions } from "./actions/TaskActions";
 import {
   SaveButton,
@@ -11,6 +11,9 @@ import {
   FailedButton,
   DeleteButton,
 } from "./TaskActionButtons";
+import { CardVariant, isOneTimeTask } from "../constants/taskConstants";
+import NotificationTimePicker from "./NotificationTimePicker";
+import { NOTIFICATION_CONSTANTS } from "../constants/notificationConstants";
 
 interface ActiveTodoItemProps {
   todo: Todo;
@@ -21,6 +24,8 @@ const ActiveTodoItem: React.FC<ActiveTodoItemProps> = ({ todo, onError }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
   const [editDueAt, setEditDueAt] = useState(todo.dueAt || "");
+  const [notificationEnabled, setNotificationEnabled] = useState(todo.notification?.enabled || false);
+  const [reminderMinutes, setReminderMinutes] = useState(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
 
   const {
     handleSave: saveAction,
@@ -36,12 +41,17 @@ const ActiveTodoItem: React.FC<ActiveTodoItemProps> = ({ todo, onError }) => {
   } = useActiveTodoActions(todo, onError);
 
   const handleSave = useCallback(async () => {
-    await saveAction(editText, editDueAt, setIsEditing);
-  }, [saveAction, editText, editDueAt]);
+    await saveAction(editText, editDueAt, setIsEditing, {
+      enabled: notificationEnabled,
+      reminderMinutes: reminderMinutes
+    });
+  }, [saveAction, editText, editDueAt, notificationEnabled, reminderMinutes]);
 
   const handleCancel = useCallback(() => {
     cancelAction(setEditText, setEditDueAt, setIsEditing);
-  }, [cancelAction]);
+    setNotificationEnabled(todo.notification?.enabled || false);
+    setReminderMinutes(todo.notification?.reminderMinutes || NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES);
+  }, [cancelAction, todo.notification]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -49,6 +59,14 @@ const ActiveTodoItem: React.FC<ActiveTodoItemProps> = ({ todo, onError }) => {
     },
     [keyDownAction, handleSave, handleCancel]
   );
+
+  const handleStartEdit = useCallback(() => {
+    setIsEditing(true);
+  }, []);
+
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditText(e.target.value);
+  }, []);
 
   const isOverdue = todo.dueAt && new Date(todo.dueAt) < new Date();
 
@@ -63,11 +81,11 @@ const ActiveTodoItem: React.FC<ActiveTodoItemProps> = ({ todo, onError }) => {
   const dueDateColor = isOverdue ? "text-red-600" : "text-gray-500";
 
   return (
-    <ToDoListItem
+    <TodoListItem
       todo={todo}
-      cardVariant="active"
+      cardVariant={CardVariant.ACTIVE}
       cardClassName="hover:shadow-md transition-all duration-200"
-      onTextClick={() => setIsEditing(true)}
+      onTextClick={handleStartEdit}
       dueDateIconColor={dueDateColor}
       dueDateTextColor={dueDateColor}
       badges={badges}
@@ -77,17 +95,30 @@ const ActiveTodoItem: React.FC<ActiveTodoItemProps> = ({ todo, onError }) => {
           <Input
             type="text"
             value={editText}
-            onChange={(e) => setEditText(e.target.value)}
+            onChange={handleTextChange}
             onKeyDown={handleKeyDown}
             autoFocus
             maxLength={500}
           />
-          {todo.type === "one-time" && (
+          {isOneTimeTask(todo.type) && (
             <CustomDateTimePicker
               value={editDueAt}
               onChange={setEditDueAt}
               placeholder="Select due date and time"
             />
+          )}
+
+          {editDueAt && (
+            <div className="border-t pt-3">
+              <NotificationTimePicker
+                enabled={notificationEnabled}
+                reminderMinutes={reminderMinutes}
+                onEnabledChange={setNotificationEnabled}
+                onReminderMinutesChange={setReminderMinutes}
+                dueAt={editDueAt}
+                taskType={todo.type}
+              />
+            </div>
           )}
           <div className="flex space-x-2">
             <SaveButton
@@ -124,7 +155,7 @@ const ActiveTodoItem: React.FC<ActiveTodoItemProps> = ({ todo, onError }) => {
           />
         </>
       )}
-    </ToDoListItem>
+    </TodoListItem>
   );
 };
 

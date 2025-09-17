@@ -1,0 +1,29 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "description": "A modern, full-stack todo application",
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && npm test",
+    "test": "npm run test:frontend && npm run test:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "analyze": "cd docs/analysis && node analyze.js",
+    "analyze:verbose": "cd docs/analysis && node analyze.js --verbose",
+    "analyze:setup": "cd docs/analysis && npm install",
+    "analyze:latest": "cd docs/analysis && node show-latest.js"
+  },
+  "keywords": [
+    "todo",
+    "react",
+    "typescript",
+    "node",
+    "express",
+    "mongodb"
+  ],
+  "author": "Todo App Team",
+  "license": "MIT"
+}

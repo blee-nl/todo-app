@@ -1,0 +1,226 @@
+# Code Quality Analysis Template
+
+**Analysis Date:** {TIMESTAMP}
+**Analysis Version:** {VERSION}
+**Project:** {PROJECT_NAME}
+**Analyzer:** {ANALYZER}
+
+---
+
+## 📊 Executive Summary
+
+| Category | Current Score | Previous Score | Trend | Status |
+|----------|---------------|----------------|-------|--------|
+| **File Organization** | {FILE_ORG_SCORE}/100 | {PREV_FILE_ORG_SCORE}/100 | {FILE_ORG_TREND} | {FILE_ORG_STATUS} |
+| **Tech Stack** | {TECH_STACK_SCORE}/100 | {PREV_TECH_STACK_SCORE}/100 | {TECH_STACK_TREND} | {TECH_STACK_STATUS} |
+| **Code Quality** | {CODE_QUALITY_SCORE}/100 | {PREV_CODE_QUALITY_SCORE}/100 | {CODE_QUALITY_TREND} | {CODE_QUALITY_STATUS} |
+| **Architecture** | {ARCHITECTURE_SCORE}/100 | {PREV_ARCHITECTURE_SCORE}/100 | {ARCHITECTURE_TREND} | {ARCHITECTURE_STATUS} |
+| **Security** | {SECURITY_SCORE}/100 | {PREV_SECURITY_SCORE}/100 | {SECURITY_TREND} | {SECURITY_STATUS} |
+| **Performance** | {PERFORMANCE_SCORE}/100 | {PREV_PERFORMANCE_SCORE}/100 | {PERFORMANCE_TREND} | {PERFORMANCE_STATUS} |
+| **Testing** | {TESTING_SCORE}/100 | {PREV_TESTING_SCORE}/100 | {TESTING_TREND} | {TESTING_STATUS} |
+| **Best Practices** | {BEST_PRACTICES_SCORE}/100 | {PREV_BEST_PRACTICES_SCORE}/100 | {BEST_PRACTICES_TREND} | {BEST_PRACTICES_STATUS} |
+
+**Overall Grade:** {OVERALL_GRADE} ({OVERALL_SCORE}/100)
+**Previous Grade:** {PREV_OVERALL_GRADE} ({PREV_OVERALL_SCORE}/100)
+**Improvement:** {IMPROVEMENT_TREND}
+
+---
+
+## 🎯 Key Metrics
+
+### Project Statistics
+- **Total Files:** {TOTAL_FILES}
+- **Lines of Code:** {TOTAL_LOC}
+- **Test Files:** {TEST_FILES}
+- **Test Coverage:** {TEST_COVERAGE}%
+- **Dependencies:** {TOTAL_DEPENDENCIES}
+- **Security Vulnerabilities:** {SECURITY_VULNS}
+- **Code Duplications:** {DUPLICATED_BLOCKS}
+- **Duplicated Lines:** {DUPLICATED_LINES}
+
+### Changes Since Last Analysis
+- **Files Added:** {FILES_ADDED}
+- **Files Modified:** {FILES_MODIFIED}
+- **Files Removed:** {FILES_REMOVED}
+- **Dependencies Updated:** {DEPS_UPDATED}
+- **Issues Fixed:** {ISSUES_FIXED}
+- **Issues Introduced:** {ISSUES_INTRODUCED}
+
+---
+
+## 📁 File Organization Analysis
+
+### ✅ Strengths
+{FILE_ORG_STRENGTHS}
+
+### 🟡 Areas for Improvement
+{FILE_ORG_IMPROVEMENTS}
+
+### 📈 Recommendations
+{FILE_ORG_RECOMMENDATIONS}
+
+---
+
+## 🔧 Tech Stack Assessment
+
+### Current Dependencies
+
+#### Frontend Dependencies
+{FRONTEND_DEPENDENCIES}
+
+#### Backend Dependencies
+{BACKEND_DEPENDENCIES}
+
+### Security Audit Results
+{SECURITY_AUDIT_RESULTS}
+
+### Update Recommendations
+{UPDATE_RECOMMENDATIONS}
+
+---
+
+## 💻 Code Quality Review
+
+### Type Safety Analysis
+- **TypeScript Coverage:** {TS_COVERAGE}%
+- **Type Errors:** {TYPE_ERRORS}
+- **Any Types Used:** {ANY_TYPES}
+
+### Code Patterns
+{CODE_PATTERNS_ANALYSIS}
+
+### Complexity Metrics
+- **Cyclomatic Complexity:** {CYCLOMATIC_COMPLEXITY}
+- **Function Length Average:** {AVG_FUNCTION_LENGTH}
+- **File Length Average:** {AVG_FILE_LENGTH}
+
+### Issues Found
+{CODE_QUALITY_ISSUES}
+
+### Code Duplication Analysis
+{CODE_DUPLICATION_REPORT}
+
+---
+
+## 🏗️ Architecture Analysis
+
+### Current Architecture Patterns
+{ARCHITECTURE_PATTERNS}
+
+### Scalability Assessment
+{SCALABILITY_ASSESSMENT}
+
+### Design Patterns Used
+{DESIGN_PATTERNS}
+
+### Architecture Issues
+{ARCHITECTURE_ISSUES}
+
+---
+
+## 🔒 Security Analysis
+
+### Vulnerabilities Found
+{SECURITY_VULNERABILITIES}
+
+### Security Measures Implemented
+{SECURITY_MEASURES}
+
+### Security Recommendations
+{SECURITY_RECOMMENDATIONS}
+
+---
+
+## ⚡ Performance Analysis
+
+### Performance Metrics
+{PERFORMANCE_METRICS}
+
+### Bottlenecks Identified
+{PERFORMANCE_BOTTLENECKS}
+
+### Optimization Opportunities
+{OPTIMIZATION_OPPORTUNITIES}
+
+---
+
+## 🧪 Testing Analysis
+
+### Test Coverage Report
+{TEST_COVERAGE_REPORT}
+
+### Test Quality Assessment
+{TEST_QUALITY_ASSESSMENT}
+
+### Testing Recommendations
+{TESTING_RECOMMENDATIONS}
+
+---
+
+## 📋 Best Practices Compliance
+
+### Followed Best Practices
+{FOLLOWED_BEST_PRACTICES}
+
+### Violations Found
+{BEST_PRACTICE_VIOLATIONS}
+
+### Compliance Recommendations
+{COMPLIANCE_RECOMMENDATIONS}
+
+---
+
+## 🚀 Action Items
+
+### 🔴 Critical Priority (Fix Immediately)
+{CRITICAL_ACTIONS}
+
+### 🟡 High Priority (This Week)
+{HIGH_PRIORITY_ACTIONS}
+
+### 🟢 Medium Priority (Next Sprint)
+{MEDIUM_PRIORITY_ACTIONS}
+
+### ⚪ Low Priority (Future Consideration)
+{LOW_PRIORITY_ACTIONS}
+
+---
+
+## 📈 Progress Tracking
+
+### Issues Resolved Since Last Analysis
+{RESOLVED_ISSUES}
+
+### New Issues Introduced
+{NEW_ISSUES}
+
+### Technical Debt Changes
+{TECHNICAL_DEBT_CHANGES}
+
+---
+
+## 🎯 Next Analysis Goals
+
+### Short-term Targets (Next Analysis)
+{SHORT_TERM_TARGETS}
+
+### Long-term Goals (3 Months)
+{LONG_TERM_GOALS}
+
+---
+
+## 📊 Historical Trend Analysis
+
+{TREND_ANALYSIS_CHART}
+
+---
+
+## 📝 Analysis Notes
+
+{ANALYSIS_NOTES}
+
+---
+
+**Analysis conducted using:** {ANALYSIS_TOOLS}
+**Generated by:** {GENERATED_BY}
+**Report Version:** {REPORT_VERSION}

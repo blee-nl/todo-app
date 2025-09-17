@@ -1,0 +1,42 @@
+{
+  "name": "todo-app-analysis",
+  "version": "1.0.0",
+  "description": "Code quality analysis tools for Todo App",
+  "main": "analyze.js",
+  "scripts": {
+    "analyze": "node analyze.js",
+    "analyze:verbose": "node analyze.js --verbose",
+    "analyze:config": "node analyze.js --config ./configs/analysis-config.json",
+    "report:latest": "node -e \"const fs=require('fs'); const reports=fs.readdirSync('./reports').filter(f=>f.startsWith('analysis-')).sort().reverse(); console.log(fs.readFileSync('./reports/'+reports[0], 'utf8'))\"",
+    "clean:reports": "find ./reports -name 'analysis-*.md' -mtime +30 -delete",
+    "metrics:export": "node -e \"const fs=require('fs'); const metrics=JSON.parse(fs.readFileSync('./configs/metrics.json')); console.log(JSON.stringify(metrics, null, 2))\"",
+    "setup": "npm install && chmod +x analyze.js"
+  },
+  "bin": {
+    "analyze-code": "./analyze.js"
+  },
+  "keywords": [
+    "code-quality",
+    "analysis",
+    "metrics",
+    "monitoring",
+    "typescript",
+    "react",
+    "node"
+  ],
+  "author": "Todo App Team",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^9.4.1",
+    "fs-extra": "^11.1.1"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  }
+}

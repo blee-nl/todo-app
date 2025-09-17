@@ -4,10 +4,11 @@ import PendingTodoItem from "./PendingTodoItem";
 import ActiveTodoItem from "./ActiveTodoItem";
 import CompletedTodoItem from "./CompletedTodoItem";
 import FailedTodoItem from "./FailedTodoItem";
-import { useTaskListActions } from "./actions/TaskActions";
+import { useTaskListBulkActions } from "./actions/TaskActions";
 import { Label } from "../design-system";
 import { TaskIcon, SuccessIcon, ErrorIcon } from "../assets/icons";
 import { DeleteAllButton } from "./TaskActionButtons";
+import { TaskState as TaskStateConstants, isCompletedTask, isFailedTask } from "../constants/taskConstants";
 
 interface TaskListProps {
   todos: Todo[];
@@ -16,28 +17,28 @@ interface TaskListProps {
 }
 
 const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
-  const { handleDeleteAll, isDeleteAllLoading } = useTaskListActions(
-    state as "completed" | "failed",
+  const { deleteAllTasksInCurrentState, isDeletingAllTasks } = useTaskListBulkActions(
+    state as typeof TaskStateConstants.COMPLETED | typeof TaskStateConstants.FAILED,
     onError
   );
 
   const stateConfig = {
-    pending: {
+    [TaskStateConstants.PENDING]: {
       icon: <TaskIcon size="lg" className="text-blue-500 opacity-50" />,
       title: "No pending tasks",
       description: "Create a new task to get started",
     },
-    active: {
+    [TaskStateConstants.ACTIVE]: {
       icon: <TaskIcon size="lg" className="text-green-500 opacity-50" />,
       title: "No active tasks",
       description: "Activate a pending task to begin working",
     },
-    completed: {
+    [TaskStateConstants.COMPLETED]: {
       icon: <SuccessIcon size="lg" className="text-gray-500 opacity-50" />,
       title: "No completed tasks",
       description: "Complete some tasks to see them here",
     },
-    failed: {
+    [TaskStateConstants.FAILED]: {
       icon: <ErrorIcon size="lg" className="text-red-500 opacity-50" />,
       title: "No failed tasks",
       description: "Tasks that weren't completed will appear here",
@@ -64,14 +65,14 @@ const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
     <div className="flex-1">
       <div className="p-6 max-w-4xl mx-auto">
         {/* Delete All Button for Completed and Failed */}
-        {(state === "completed" || state === "failed") && (
+        {(isCompletedTask(state) || isFailedTask(state)) && (
           <div className="mb-6 flex justify-end">
             <DeleteAllButton
-              onClick={handleDeleteAll}
-              disabled={isDeleteAllLoading}
-              isLoading={isDeleteAllLoading}
+              onClick={deleteAllTasksInCurrentState}
+              disabled={isDeletingAllTasks}
+              isLoading={isDeletingAllTasks}
               count={todos.length}
-              state={state as "completed" | "failed"}
+              state={state as typeof TaskStateConstants.COMPLETED | typeof TaskStateConstants.FAILED}
             />
           </div>
         )}
@@ -79,7 +80,7 @@ const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
         <div className="space-y-3">
           {todos.map((todo) => {
             switch (state) {
-              case "pending":
+              case TaskStateConstants.PENDING:
                 return (
                   <PendingTodoItem
                     key={todo.id}
@@ -87,11 +88,11 @@ const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
                     onError={onError}
                   />
                 );
-              case "active":
+              case TaskStateConstants.ACTIVE:
                 return (
                   <ActiveTodoItem key={todo.id} todo={todo} onError={onError} />
                 );
-              case "completed":
+              case TaskStateConstants.COMPLETED:
                 return (
                   <CompletedTodoItem
                     key={todo.id}
@@ -99,7 +100,7 @@ const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
                     onError={onError}
                   />
                 );
-              case "failed":
+              case TaskStateConstants.FAILED:
                 return (
                   <FailedTodoItem key={todo.id} todo={todo} onError={onError} />
                 );

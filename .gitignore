@@ -143,3 +143,15 @@ playwright/.cache/
 *.tar.gz
 *.rar
 *.7z
+.DS_Store
+
+# Analysis files
+reports/
+configs/
+
+# AI files
+CLAUDE.md
+.mcp.json
+.claude/
+.cursor/
+.continue/

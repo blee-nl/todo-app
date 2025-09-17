@@ -36,9 +36,23 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Body parsing middleware
+// Body parsing middleware with error handling
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// JSON parsing error handler
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof SyntaxError && 'body' in err) {
+    console.error('JSON parsing error:', err.message);
+    res.status(400).json({
+      error: 'Bad Request',
+      message: 'Invalid JSON in request body',
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+  next(err);
+});
 
 // MongoDB connection
 const uri: string = process.env.MONGO_URI || 'mongodb://localhost:27017/todo-app';

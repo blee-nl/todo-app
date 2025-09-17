@@ -28,6 +28,8 @@ import ReactivateIconElement from "./ReactivateIcon";
 import InfoIconElement from "./InfoIcon";
 import CloseIconElement from "./CloseIcon";
 import RefreshIconElement from "./RefreshIcon";
+import BellIconElement from "./BellIcon";
+import BellSlashIconElement from "./BellSlashIcon";
 
 // Create base icon component
 const createBaseIcon = (children: React.ReactNode) => {
@@ -68,6 +70,8 @@ export const ReactivateIcon = createBaseIcon(ReactivateIconElement);
 export const InfoIcon = createBaseIcon(InfoIconElement);
 export const CloseIcon = createBaseIcon(CloseIconElement);
 export const RefreshIcon = createBaseIcon(RefreshIconElement);
+export const BellIcon = createBaseIcon(BellIconElement);
+export const BellSlashIcon = createBaseIcon(BellSlashIconElement);
 
 // Export types
 export type { IconProps };

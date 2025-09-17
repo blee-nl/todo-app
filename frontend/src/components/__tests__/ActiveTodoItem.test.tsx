@@ -20,6 +20,9 @@ vi.mock("../actions/TaskActions", () => ({
       _editDueAt: string,
       _setIsEditing: (editing: boolean) => void
     ) => {
+      void _editText;
+      void _editDueAt;
+      void _setIsEditing;
       try {
         await mockUpdateTodo();
       } catch (error) {

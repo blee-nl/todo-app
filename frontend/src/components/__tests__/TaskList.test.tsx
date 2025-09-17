@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import TaskList from "../TaskList";
 import type { Todo } from "../../services/api";
+import { TaskType, TaskState } from "../../constants/taskConstants";
 
 // Mock the TaskActions
 const mockHandleDeleteAll = vi.fn();
@@ -16,6 +17,16 @@ vi.mock("../actions/TaskActions", () => ({
       }
     },
     isDeleteAllLoading: false,
+  }),
+  useTaskListBulkActions: (_state: string, onError?: (error: Error) => void) => ({
+    deleteAllTasksInCurrentState: async () => {
+      try {
+        await mockHandleDeleteAll();
+      } catch (error) {
+        onError?.(error as Error);
+      }
+    },
+    isDeletingAllTasks: false,
   }),
 }));
 
@@ -48,8 +59,8 @@ const mockTodos: Todo[] = [
   {
     id: "1",
     text: "Test todo 1",
-    type: "one-time",
-    state: "pending",
+    type: TaskType.ONE_TIME,
+    state: TaskState.PENDING,
     dueAt: "2024-12-31T23:59:59.000Z",
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
@@ -57,8 +68,8 @@ const mockTodos: Todo[] = [
   {
     id: "2",
     text: "Test todo 2",
-    type: "daily",
-    state: "active",
+    type: TaskType.DAILY,
+    state: TaskState.ACTIVE,
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
     activatedAt: "2024-01-01T00:00:00.000Z",
@@ -74,7 +85,7 @@ describe("TaskList", () => {
   });
 
   it("should render empty state for pending tasks", () => {
-    render(<TaskList todos={[]} state="pending" onError={mockOnError} />);
+    render(<TaskList todos={[]} state={TaskState.PENDING} onError={mockOnError} />);
 
     // Check for SVG icon instead of emoji - look for the SVG element directly
     const svgIcon = document.querySelector('svg[aria-hidden="true"]');
@@ -86,7 +97,7 @@ describe("TaskList", () => {
   });
 
   it("should render empty state for active tasks", () => {
-    render(<TaskList todos={[]} state="active" onError={mockOnError} />);
+    render(<TaskList todos={[]} state={TaskState.ACTIVE} onError={mockOnError} />);
 
     // Check for SVG icon instead of emoji
     const svgIcon = document.querySelector('svg[aria-hidden="true"]');
@@ -98,7 +109,7 @@ describe("TaskList", () => {
   });
 
   it("should render empty state for completed tasks", () => {
-    render(<TaskList todos={[]} state="completed" onError={mockOnError} />);
+    render(<TaskList todos={[]} state={TaskState.COMPLETED} onError={mockOnError} />);
 
     // Check for SVG icon instead of emoji
     const svgIcon = document.querySelector('svg[aria-hidden="true"]');
@@ -110,7 +121,7 @@ describe("TaskList", () => {
   });
 
   it("should render empty state for failed tasks", () => {
-    render(<TaskList todos={[]} state="failed" onError={mockOnError} />);
+    render(<TaskList todos={[]} state={TaskState.FAILED} onError={mockOnError} />);
 
     // Check for SVG icon instead of emoji
     const svgIcon = document.querySelector('svg[aria-hidden="true"]');
@@ -122,10 +133,10 @@ describe("TaskList", () => {
   });
 
   it("should render pending todo items", () => {
-    const pendingTodos = mockTodos.filter((todo) => todo.state === "pending");
+    const pendingTodos = mockTodos.filter((todo) => todo.state === TaskState.PENDING);
 
     render(
-      <TaskList todos={pendingTodos} state="pending" onError={mockOnError} />
+      <TaskList todos={pendingTodos} state={TaskState.PENDING} onError={mockOnError} />
     );
 
     expect(screen.getByTestId("pending-1")).toBeInTheDocument();
@@ -133,10 +144,10 @@ describe("TaskList", () => {
   });
 
   it("should render active todo items", () => {
-    const activeTodos = mockTodos.filter((todo) => todo.state === "active");
+    const activeTodos = mockTodos.filter((todo) => todo.state === TaskState.ACTIVE);
 
     render(
-      <TaskList todos={activeTodos} state="active" onError={mockOnError} />
+      <TaskList todos={activeTodos} state={TaskState.ACTIVE} onError={mockOnError} />
     );
 
     expect(screen.getByTestId("active-2")).toBeInTheDocument();
@@ -147,8 +158,8 @@ describe("TaskList", () => {
     const completedTodo: Todo = {
       id: "3",
       text: "Completed todo",
-      type: "one-time",
-      state: "completed",
+      type: TaskType.ONE_TIME,
+      state: TaskState.COMPLETED,
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
       activatedAt: "2024-01-01T00:00:00.000Z",
@@ -158,7 +169,7 @@ describe("TaskList", () => {
     render(
       <TaskList
         todos={[completedTodo]}
-        state="completed"
+        state={TaskState.COMPLETED}
         onError={mockOnError}
       />
     );
@@ -171,8 +182,8 @@ describe("TaskList", () => {
     const failedTodo: Todo = {
       id: "4",
       text: "Failed todo",
-      type: "daily",
-      state: "failed",
+      type: TaskType.DAILY,
+      state: TaskState.FAILED,
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
       activatedAt: "2024-01-01T00:00:00.000Z",
@@ -180,7 +191,7 @@ describe("TaskList", () => {
     };
 
     render(
-      <TaskList todos={[failedTodo]} state="failed" onError={mockOnError} />
+      <TaskList todos={[failedTodo]} state={TaskState.FAILED} onError={mockOnError} />
     );
 
     expect(screen.getByTestId("failed-4")).toBeInTheDocument();
@@ -189,7 +200,7 @@ describe("TaskList", () => {
 
   it("should have correct container styling", () => {
     const { container } = render(
-      <TaskList todos={[]} state="pending" onError={mockOnError} />
+      <TaskList todos={[]} state={TaskState.PENDING} onError={mockOnError} />
     );
 
     const taskList = container.firstChild as HTMLElement;
@@ -206,8 +217,8 @@ describe("TaskList", () => {
     const completedTodo: Todo = {
       id: "3",
       text: "Completed todo",
-      type: "one-time",
-      state: "completed",
+      type: TaskType.ONE_TIME,
+      state: TaskState.COMPLETED,
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
       activatedAt: "2024-01-01T00:00:00.000Z",
@@ -217,7 +228,7 @@ describe("TaskList", () => {
     render(
       <TaskList
         todos={[completedTodo]}
-        state="completed"
+        state={TaskState.COMPLETED}
         onError={mockOnError}
       />
     );
@@ -229,8 +240,8 @@ describe("TaskList", () => {
     const failedTodo: Todo = {
       id: "4",
       text: "Failed todo",
-      type: "daily",
-      state: "failed",
+      type: TaskType.DAILY,
+      state: TaskState.FAILED,
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
       activatedAt: "2024-01-01T00:00:00.000Z",
@@ -238,27 +249,27 @@ describe("TaskList", () => {
     };
 
     render(
-      <TaskList todos={[failedTodo]} state="failed" onError={mockOnError} />
+      <TaskList todos={[failedTodo]} state={TaskState.FAILED} onError={mockOnError} />
     );
 
     expect(screen.getByText("Delete All Failed")).toBeInTheDocument();
   });
 
   it("should not show delete all button for pending tasks", () => {
-    const pendingTodos = mockTodos.filter((todo) => todo.state === "pending");
+    const pendingTodos = mockTodos.filter((todo) => todo.state === TaskState.PENDING);
 
     render(
-      <TaskList todos={pendingTodos} state="pending" onError={mockOnError} />
+      <TaskList todos={pendingTodos} state={TaskState.PENDING} onError={mockOnError} />
     );
 
     expect(screen.queryByText("Delete All Pending")).not.toBeInTheDocument();
   });
 
   it("should not show delete all button for active tasks", () => {
-    const activeTodos = mockTodos.filter((todo) => todo.state === "active");
+    const activeTodos = mockTodos.filter((todo) => todo.state === TaskState.ACTIVE);
 
     render(
-      <TaskList todos={activeTodos} state="active" onError={mockOnError} />
+      <TaskList todos={activeTodos} state={TaskState.ACTIVE} onError={mockOnError} />
     );
 
     expect(screen.queryByText("Delete All Active")).not.toBeInTheDocument();
@@ -268,8 +279,8 @@ describe("TaskList", () => {
     const completedTodo: Todo = {
       id: "3",
       text: "Completed todo",
-      type: "one-time",
-      state: "completed",
+      type: TaskType.ONE_TIME,
+      state: TaskState.COMPLETED,
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
       activatedAt: "2024-01-01T00:00:00.000Z",
@@ -279,7 +290,7 @@ describe("TaskList", () => {
     render(
       <TaskList
         todos={[completedTodo]}
-        state="completed"
+        state={TaskState.COMPLETED}
         onError={mockOnError}
       />
     );
@@ -296,8 +307,8 @@ describe("TaskList", () => {
     const failedTodo: Todo = {
       id: "4",
       text: "Failed todo",
-      type: "daily",
-      state: "failed",
+      type: TaskType.DAILY,
+      state: TaskState.FAILED,
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
       activatedAt: "2024-01-01T00:00:00.000Z",
@@ -305,7 +316,7 @@ describe("TaskList", () => {
     };
 
     render(
-      <TaskList todos={[failedTodo]} state="failed" onError={mockOnError} />
+      <TaskList todos={[failedTodo]} state={TaskState.FAILED} onError={mockOnError} />
     );
 
     const deleteAllButton = screen.getByText("Delete All Failed");
@@ -320,8 +331,8 @@ describe("TaskList", () => {
     const completedTodo: Todo = {
       id: "3",
       text: "Completed todo",
-      type: "one-time",
-      state: "completed",
+      type: TaskType.ONE_TIME,
+      state: TaskState.COMPLETED,
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
       activatedAt: "2024-01-01T00:00:00.000Z",
@@ -334,7 +345,7 @@ describe("TaskList", () => {
     render(
       <TaskList
         todos={[completedTodo]}
-        state="completed"
+        state={TaskState.COMPLETED}
         onError={mockOnError}
       />
     );
@@ -355,8 +366,8 @@ describe("TaskList", () => {
     const failedTodo: Todo = {
       id: "4",
       text: "Failed todo",
-      type: "daily",
-      state: "failed",
+      type: TaskType.DAILY,
+      state: TaskState.FAILED,
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
       activatedAt: "2024-01-01T00:00:00.000Z",
@@ -367,7 +378,7 @@ describe("TaskList", () => {
     mockHandleDeleteAll.mockRejectedValue(error);
 
     render(
-      <TaskList todos={[failedTodo]} state="failed" onError={mockOnError} />
+      <TaskList todos={[failedTodo]} state={TaskState.FAILED} onError={mockOnError} />
     );
 
     const deleteAllButton = screen.getByText("Delete All Failed");

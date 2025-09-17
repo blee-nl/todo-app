@@ -5,11 +5,16 @@ let mongoServer: MongoMemoryServer;
 
 // Setup in-memory MongoDB for testing
 beforeAll(async () => {
+  // Close any existing connections first
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
+
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  
+
   await mongoose.connect(mongoUri);
-});
+}, 30000);
 
 // Clean up after each test
 afterEach(async () => {
@@ -23,10 +28,14 @@ afterEach(async () => {
 
 // Clean up after all tests
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  await mongoServer.stop();
-});
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+  }
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
+}, 30000);
 
 // Mock console methods to reduce noise during tests
 global.console = {

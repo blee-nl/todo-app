@@ -1,14 +1,16 @@
 import { Request, Response } from 'express';
 import Todo, { ITodo, TaskType, TaskState } from '../models/Todo';
+import { NotificationService } from '../services/NotificationService';
+import { TIME_CONSTANTS, NOTIFICATION_CONSTANTS } from '../constants/timeConstants';
 
 // Custom error class for better error handling
-class TodoError extends Error {
+class TodoValidationError extends Error {
   statusCode: number;
   
   constructor(message: string, statusCode: number = 500) {
     super(message);
     this.statusCode = statusCode;
-    this.name = 'TodoError';
+    this.name = 'TodoValidationError';
   }
 }
 
@@ -18,7 +20,7 @@ export const getAllTodos = async (req: Request, res: Response): Promise<void> =>
     const todos = await Todo.find().sort({ createdAt: -1 });
     
     // Group todos by state
-    const groupedTodos = {
+    const todosByState = {
       pending: todos.filter(todo => todo.state === 'pending'),
       active: todos.filter(todo => todo.state === 'active'),
       completed: todos.filter(todo => todo.state === 'completed'),
@@ -28,7 +30,7 @@ export const getAllTodos = async (req: Request, res: Response): Promise<void> =>
     res.status(200).json({
       success: true,
       count: todos.length,
-      data: groupedTodos
+      data: todosByState
     });
   } catch (error) {
     const err = error as Error;
@@ -46,7 +48,7 @@ export const getTodosByState = async (req: Request, res: Response): Promise<void
     const { state } = req.params;
     
     if (!['pending', 'active', 'completed', 'failed'].includes(state)) {
-      throw new TodoError('Invalid state. Must be: pending, active, completed, or failed', 400);
+      throw new TodoValidationError('Invalid state. Must be: pending, active, completed, or failed', 400);
     }
     
     const todos = await Todo.findByState(state as TaskState);
@@ -57,7 +59,7 @@ export const getTodosByState = async (req: Request, res: Response): Promise<void
       data: todos
     });
   } catch (error) {
-    const err = error as TodoError;
+    const err = error as TodoValidationError;
     res.status(err.statusCode || 500).json({
       success: false,
       error: 'Failed to fetch todos',
@@ -72,13 +74,13 @@ export const getTodoById = async (req: Request, res: Response): Promise<void> =>
     const { id } = req.params;
     
     if (!id) {
-      throw new TodoError('Todo ID is required', 400);
+      throw new TodoValidationError('Todo ID is required', 400);
     }
     
     const todo = await Todo.findById(id);
     
     if (!todo) {
-      throw new TodoError('Todo not found', 404);
+      throw new TodoValidationError('Todo not found', 404);
     }
     
     res.status(200).json({
@@ -86,7 +88,7 @@ export const getTodoById = async (req: Request, res: Response): Promise<void> =>
       data: todo
     });
   } catch (error) {
-    const err = error as TodoError;
+    const err = error as TodoValidationError;
     res.status(err.statusCode || 500).json({
       success: false,
       error: 'Failed to fetch todo',
@@ -98,22 +100,22 @@ export const getTodoById = async (req: Request, res: Response): Promise<void> =>
 // Create new todo
 export const createTodo = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { text, type, dueAt } = req.body;
+    const { text, type, dueAt, notification } = req.body;
     
     if (!text || text.trim().length === 0) {
-      throw new TodoError('Todo text is required', 400);
+      throw new TodoValidationError('Todo text is required', 400);
     }
     
     if (text.length > 500) {
-      throw new TodoError('Todo text cannot exceed 500 characters', 400);
+      throw new TodoValidationError('Todo text cannot exceed 500 characters', 400);
     }
     
     if (!type || !['one-time', 'daily'].includes(type)) {
-      throw new TodoError('Task type is required and must be "one-time" or "daily"', 400);
+      throw new TodoValidationError('Task type is required and must be "one-time" or "daily"', 400);
     }
     
     if (type === 'one-time' && !dueAt) {
-      throw new TodoError('Due date is required for one-time tasks', 400);
+      throw new TodoValidationError('Due date is required for one-time tasks', 400);
     }
     
     const todoData: any = {
@@ -121,31 +123,47 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
       type,
       state: 'pending'
     };
+
+    // Include notification settings if provided
+    if (notification) {
+      let reminderMinutes = NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES;
+
+      if (notification.reminderMinutes &&
+          notification.reminderMinutes >= NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES &&
+          notification.reminderMinutes <= NOTIFICATION_CONSTANTS.MAX_REMINDER_MINUTES) {
+        reminderMinutes = notification.reminderMinutes;
+      }
+
+      todoData.notification = {
+        enabled: notification.enabled,
+        reminderMinutes: reminderMinutes
+      };
+    }
     
     if (type === 'one-time' && dueAt) {
       const dueDate = new Date(dueAt);
       if (isNaN(dueDate.getTime())) {
-        throw new TodoError('Invalid due date format', 400);
+        throw new TodoValidationError('Invalid due date format', 400);
       }
       
       // Check if due date is at least 10 minutes from now
-      const now = new Date();
-      const tenMinutesFromNow = new Date(now.getTime() + 10 * 60 * 1000);
-      if (dueDate < tenMinutesFromNow) {
-        throw new TodoError('Due date must be at least 10 minutes from now', 400);
+      const currentTime = new Date();
+      const minimumDueDateTime = new Date(currentTime.getTime() + TIME_CONSTANTS.MIN_DUE_DATE_OFFSET_MINUTES * TIME_CONSTANTS.MILLISECONDS_PER_MINUTE);
+      if (dueDate < minimumDueDateTime) {
+        throw new TodoValidationError(`Due date must be at least ${TIME_CONSTANTS.MIN_DUE_DATE_OFFSET_MINUTES} minutes from now`, 400);
       }
       
       todoData.dueAt = dueDate;
     }
     
     // Check for duplicate active tasks with the same content
-    const existingActiveTodo = await Todo.findOne({
+    const duplicateActiveTodo = await Todo.findOne({
       text: todoData.text,
       state: 'active'
     });
     
-    if (existingActiveTodo) {
-      throw new TodoError('An active task with this content already exists', 400);
+    if (duplicateActiveTodo) {
+      throw new TodoValidationError('An active task with this content already exists', 400);
     }
     
     const todo = new Todo(todoData);
@@ -157,7 +175,7 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
       data: savedTodo
     });
   } catch (error) {
-    const err = error as TodoError;
+    const err = error as TodoValidationError;
     res.status(err.statusCode || 500).json({
       success: false,
       error: 'Failed to create todo',
@@ -170,45 +188,61 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
 export const updateTodo = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { text, dueAt } = req.body;
+    const { text, dueAt, notification } = req.body;
     
     if (!id) {
-      throw new TodoError('Todo ID is required', 400);
+      throw new TodoValidationError('Todo ID is required', 400);
     }
     
     const todo = await Todo.findById(id);
     
     if (!todo) {
-      throw new TodoError('Todo not found', 404);
+      throw new TodoValidationError('Todo not found', 404);
     }
     
     // Allow editing for both pending and active tasks
     if (!['pending', 'active'].includes(todo.state)) {
-      throw new TodoError('Only pending and active tasks can be edited', 400);
+      throw new TodoValidationError('Only pending and active tasks can be edited', 400);
     }
     
     if (!text || text.trim().length === 0) {
-      throw new TodoError('Todo text is required', 400);
+      throw new TodoValidationError('Todo text is required', 400);
     }
     
     if (text.length > 500) {
-      throw new TodoError('Todo text cannot exceed 500 characters', 400);
+      throw new TodoValidationError('Todo text cannot exceed 500 characters', 400);
     }
     
     todo.text = text.trim();
-    
+
+    // Update notification settings if provided
+    if (notification) {
+      let reminderMinutes = NOTIFICATION_CONSTANTS.DEFAULT_REMINDER_MINUTES;
+
+      if (notification.reminderMinutes &&
+          notification.reminderMinutes >= NOTIFICATION_CONSTANTS.MIN_REMINDER_MINUTES &&
+          notification.reminderMinutes <= NOTIFICATION_CONSTANTS.MAX_REMINDER_MINUTES) {
+        reminderMinutes = notification.reminderMinutes;
+      }
+
+      todo.notification = {
+        enabled: notification.enabled,
+        reminderMinutes: reminderMinutes
+      };
+    }
+
     // Update dueAt if provided and task is one-time
     if (dueAt && todo.type === 'one-time') {
       const dueDate = new Date(dueAt);
       if (isNaN(dueDate.getTime())) {
-        throw new TodoError('Invalid due date format', 400);
+        throw new TodoValidationError('Invalid due date format', 400);
       }
       
       // Check if due date is at least 10 minutes from now
-      const now = new Date();
-      const tenMinutesFromNow = new Date(now.getTime() + 10 * 60 * 1000);
-      if (dueDate < tenMinutesFromNow) {
-        throw new TodoError('Due date must be at least 10 minutes from now', 400);
+      const currentTime = new Date();
+      const minimumDueDateTime = new Date(currentTime.getTime() + TIME_CONSTANTS.MIN_DUE_DATE_OFFSET_MINUTES * TIME_CONSTANTS.MILLISECONDS_PER_MINUTE);
+      if (dueDate < minimumDueDateTime) {
+        throw new TodoValidationError(`Due date must be at least ${TIME_CONSTANTS.MIN_DUE_DATE_OFFSET_MINUTES} minutes from now`, 400);
       }
       
       todo.dueAt = dueDate;
@@ -222,7 +256,7 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       data: updatedTodo
     });
   } catch (error) {
-    const err = error as TodoError;
+    const err = error as TodoValidationError;
     res.status(err.statusCode || 500).json({
       success: false,
       error: 'Failed to update todo',
@@ -237,17 +271,17 @@ export const activateTodo = async (req: Request, res: Response): Promise<void> =
     const { id } = req.params;
     
     if (!id) {
-      throw new TodoError('Todo ID is required', 400);
+      throw new TodoValidationError('Todo ID is required', 400);
     }
     
     const todo = await Todo.findById(id);
     
     if (!todo) {
-      throw new TodoError('Todo not found', 404);
+      throw new TodoValidationError('Todo not found', 404);
     }
     
     if (todo.state !== 'pending') {
-      throw new TodoError('Only pending tasks can be activated', 400);
+      throw new TodoValidationError('Only pending tasks can be activated', 400);
     }
     
     // Check for duplicate active tasks
@@ -258,7 +292,7 @@ export const activateTodo = async (req: Request, res: Response): Promise<void> =
     });
     
     if (existingActive) {
-      throw new TodoError('A similar active task already exists', 409);
+      throw new TodoValidationError('A similar active task already exists', 409);
     }
     
     const activatedTodo = await todo.activate();
@@ -269,7 +303,7 @@ export const activateTodo = async (req: Request, res: Response): Promise<void> =
       data: activatedTodo
     });
   } catch (error) {
-    const err = error as TodoError;
+    const err = error as TodoValidationError;
     res.status(err.statusCode || 500).json({
       success: false,
       error: 'Failed to activate todo',
@@ -284,17 +318,17 @@ export const completeTodo = async (req: Request, res: Response): Promise<void> =
     const { id } = req.params;
     
     if (!id) {
-      throw new TodoError('Todo ID is required', 400);
+      throw new TodoValidationError('Todo ID is required', 400);
     }
     
     const todo = await Todo.findById(id);
     
     if (!todo) {
-      throw new TodoError('Todo not found', 404);
+      throw new TodoValidationError('Todo not found', 404);
     }
     
     if (todo.state !== 'active') {
-      throw new TodoError('Only active tasks can be completed', 400);
+      throw new TodoValidationError('Only active tasks can be completed', 400);
     }
     
     const completedTodo = await todo.complete();
@@ -305,7 +339,7 @@ export const completeTodo = async (req: Request, res: Response): Promise<void> =
       data: completedTodo
     });
   } catch (error) {
-    const err = error as TodoError;
+    const err = error as TodoValidationError;
     res.status(err.statusCode || 500).json({
       success: false,
       error: 'Failed to complete todo',
@@ -320,17 +354,17 @@ export const failTodo = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     
     if (!id) {
-      throw new TodoError('Todo ID is required', 400);
+      throw new TodoValidationError('Todo ID is required', 400);
     }
     
     const todo = await Todo.findById(id);
     
     if (!todo) {
-      throw new TodoError('Todo not found', 404);
+      throw new TodoValidationError('Todo not found', 404);
     }
     
     if (todo.state !== 'active') {
-      throw new TodoError('Only active tasks can be marked as failed', 400);
+      throw new TodoValidationError('Only active tasks can be marked as failed', 400);
     }
     
     const failedTodo = await todo.fail();
@@ -341,7 +375,7 @@ export const failTodo = async (req: Request, res: Response): Promise<void> => {
       data: failedTodo
     });
   } catch (error) {
-    const err = error as TodoError;
+    const err = error as TodoValidationError;
     res.status(err.statusCode || 500).json({
       success: false,
       error: 'Failed to mark todo as failed',
@@ -354,20 +388,20 @@ export const failTodo = async (req: Request, res: Response): Promise<void> => {
 export const reactivateTodo = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { newDueAt } = req.body || {};
+    const { newDueAt, notification } = req.body || {};
     
     if (!id) {
-      throw new TodoError('Todo ID is required', 400);
+      throw new TodoValidationError('Todo ID is required', 400);
     }
     
     const todo = await Todo.findById(id);
     
     if (!todo) {
-      throw new TodoError('Todo not found', 404);
+      throw new TodoValidationError('Todo not found', 404);
     }
     
     if (!['completed', 'failed'].includes(todo.state)) {
-      throw new TodoError('Only completed or failed tasks can be re-activated', 400);
+      throw new TodoValidationError('Only completed or failed tasks can be re-activated', 400);
     }
     
     // Check for duplicate active tasks
@@ -378,15 +412,15 @@ export const reactivateTodo = async (req: Request, res: Response): Promise<void>
     });
     
     if (existingActive) {
-      throw new TodoError('A similar active task already exists', 409);
+      throw new TodoValidationError('A similar active task already exists', 409);
     }
     
     let reactivatedTodo;
-    
+
     if (todo.type === 'one-time' && newDueAt) {
-      reactivatedTodo = await todo.reactivate(new Date(newDueAt));
+      reactivatedTodo = await todo.reactivate(new Date(newDueAt), notification);
     } else {
-      reactivatedTodo = await todo.reactivate();
+      reactivatedTodo = await todo.reactivate(undefined, notification);
     }
     
     res.status(201).json({
@@ -395,7 +429,7 @@ export const reactivateTodo = async (req: Request, res: Response): Promise<void>
       data: reactivatedTodo
     });
   } catch (error) {
-    const err = error as TodoError;
+    const err = error as TodoValidationError;
     res.status(err.statusCode || 500).json({
       success: false,
       error: 'Failed to re-activate todo',
@@ -410,13 +444,13 @@ export const deleteTodo = async (req: Request, res: Response): Promise<void> => 
     const { id } = req.params;
     
     if (!id) {
-      throw new TodoError('Todo ID is required', 400);
+      throw new TodoValidationError('Todo ID is required', 400);
     }
     
     const todo = await Todo.findByIdAndDelete(id);
     
     if (!todo) {
-      throw new TodoError('Todo not found', 404);
+      throw new TodoValidationError('Todo not found', 404);
     }
     
     res.status(200).json({
@@ -425,7 +459,7 @@ export const deleteTodo = async (req: Request, res: Response): Promise<void> => 
       data: todo
     });
   } catch (error) {
-    const err = error as TodoError;
+    const err = error as TodoValidationError;
     res.status(err.statusCode || 500).json({
       success: false,
       error: 'Failed to delete todo',
@@ -504,7 +538,7 @@ export const processDailyTasks = async (req: Request, res: Response): Promise<vo
     // Get all daily tasks that should be active today
     const dailyTasks = await Todo.findByType('daily');
     
-    let createdCount = 0;
+    let activatedTasksCount = 0;
     
     for (const task of dailyTasks) {
       // Check if there's already an active instance for today
@@ -530,20 +564,135 @@ export const processDailyTasks = async (req: Request, res: Response): Promise<vo
         });
         
         await newTask.save();
-        createdCount++;
+        activatedTasksCount++;
       }
     }
     
     res.status(200).json({
       success: true,
-      message: `${createdCount} daily tasks activated for today`,
-      createdCount
+      message: `${activatedTasksCount} daily tasks activated for today`,
+      activatedTasksCount
     });
   } catch (error) {
     const err = error as Error;
     res.status(500).json({
       success: false,
       error: 'Failed to process daily tasks',
+      message: err.message
+    });
+  }
+};
+
+/**
+ * Get tasks ready for notification
+ */
+export const getTasksForNotification = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tasks = await NotificationService.getTasksReadyForNotification();
+
+    const notificationData = tasks.map(task => ({
+      task: {
+        id: task.id,
+        text: task.text,
+        type: task.type,
+        state: task.state,
+        dueAt: task.dueAt,
+        notification: task.notification
+      },
+      notification: NotificationService.createNotificationData(task)
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: tasks.length,
+      data: notificationData
+    });
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get tasks for notification',
+      message: err.message
+    });
+  }
+};
+
+/**
+ * Update notification settings for a task
+ */
+export const updateNotificationSettings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { enabled, reminderMinutes } = req.body;
+
+    // Validation
+    if (typeof enabled !== 'boolean') {
+      res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'enabled field must be a boolean'
+      });
+      return;
+    }
+
+    if (reminderMinutes !== undefined) {
+      if (typeof reminderMinutes !== 'number' || reminderMinutes < 1 || reminderMinutes > 10080) {
+        res.status(400).json({
+          success: false,
+          error: 'Validation Error',
+          message: 'reminderMinutes must be a number between 1 and 10080 (7 days)'
+        });
+        return;
+      }
+    }
+
+    const task = await NotificationService.updateNotificationSettings(id, {
+      enabled,
+      reminderMinutes
+    });
+
+    if (!task) {
+      res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Task not found'
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Notification settings updated successfully',
+      data: task
+    });
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update notification settings',
+      message: err.message
+    });
+  }
+};
+
+/**
+ * Mark task as notified
+ */
+export const markTaskAsNotified = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    await NotificationService.markTaskAsNotified(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Task marked as notified successfully'
+    });
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({
+      success: false,
+      error: 'Failed to mark task as notified',
       message: err.message
     });
   }
