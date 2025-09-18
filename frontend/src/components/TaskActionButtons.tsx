@@ -29,6 +29,7 @@ const CancelButton: React.FC<CancelButtonProps> = ({
     onClick={onClick}
     disabled={disabled}
     className={className}
+    data-testid="cancel-todo-button"
   >
     Cancel
   </Button>
@@ -282,6 +283,7 @@ const AddTaskButton: React.FC<AddTaskButtonProps> = ({
     isLoading={isLoading}
     leftIcon={<PlusIcon size="sm" />}
     className={className}
+    data-testid="submit-todo-button"
   >
     Add Task
   </Button>

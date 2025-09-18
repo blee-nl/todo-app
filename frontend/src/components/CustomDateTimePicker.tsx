@@ -142,7 +142,7 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
         aria-label={placeholder}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        data-testid="custom-datetime-picker"
+        data-testid="due-date-input"
       >
         <div className="flex items-center space-x-3">
           <CalendarIcon className="text-gray-400" size="md" />

@@ -202,6 +202,7 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
           checked={enabled}
           onChange={handleEnabledToggle}
           className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          data-testid="notification-toggle"
         />
         <div className="flex-1">
           <div className="flex items-center space-x-2">
@@ -290,6 +291,7 @@ const NotificationTimePicker: React.FC<NotificationTimePickerProps> = ({
                   }
                   className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
+                  data-testid="reminder-minutes-input"
                 />
                 <select
                   value={customUnit}

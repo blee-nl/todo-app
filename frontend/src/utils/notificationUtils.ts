@@ -17,7 +17,10 @@ export class NotificationManager {
    * Check if notifications are supported by the browser
    */
   static isSupported(): boolean {
-    return 'Notification' in window && 'serviceWorker' in navigator;
+    return typeof window !== 'undefined' && 
+           'Notification' in window && 
+           typeof navigator !== 'undefined' && 
+           'serviceWorker' in navigator;
   }
 
   /**

@@ -68,7 +68,7 @@ const TodoApp: React.FC = () => {
   };
 
   return (
-    <Layout>
+    <Layout data-testid="todo-app">
       <Sidebar
         selectedState={selectedState}
         onStateChange={setSelectedState}

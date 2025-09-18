@@ -49,7 +49,7 @@ const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
 
   if (todos.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-8" data-testid="todo-list">
         <div className="text-center">
           <div className="mb-4">{taskState.icon}</div>
           <Label className="text-lg font-medium text-gray-900 mb-2">
@@ -62,7 +62,7 @@ const TaskList: React.FC<TaskListProps> = ({ todos, state, onError }) => {
   }
 
   return (
-    <div className="flex-1">
+    <div className="flex-1" data-testid="todo-list">
       <div className="p-6 max-w-4xl mx-auto">
         {/* Delete All Button for Completed and Failed */}
         {(isCompletedTask(state) || isFailedTask(state)) && (

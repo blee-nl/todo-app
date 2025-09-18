@@ -16,7 +16,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
   onTimeChange,
 }) => {
   return (
-    <div className="flex flex-col items-center space-y-4">
+    <div className="flex flex-col items-center space-y-4" data-testid="due-time-input">
       <Label className="text-sm font-medium text-gray-700">Select Time</Label>
 
       <div className="flex items-center space-x-3">

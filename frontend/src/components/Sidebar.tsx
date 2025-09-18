@@ -6,6 +6,7 @@ import {
   XCircleIcon,
   ChartBarIcon,
   ClockIcon,
+  QueueListIcon,
 } from "@heroicons/react/24/outline";
 import type { TaskState, GroupedTodos } from "../services/api";
 import { Text, Heading, Button } from "../design-system";
@@ -100,6 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   ? `${item.activeBgColor} ${item.color} shadow-md border-2 border-current`
                   : `${item.bgColor} text-gray-600 hover:${item.activeBgColor} hover:shadow-sm hover:scale-105`
               }`}
+              data-testid={`${item.state}-tab`}
             >
               <div className="flex items-center space-x-3">
                 <item.icon className="w-5 h-5" />

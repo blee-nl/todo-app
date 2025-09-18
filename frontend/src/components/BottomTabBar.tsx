@@ -58,6 +58,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
                 ? "text-blue-600 bg-blue-50 shadow-md scale-105"
                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:scale-105"
             }`}
+            data-testid={`${tab.state}-tab-mobile`}
           >
             <tab.icon className="w-5 h-5" />
             <span className="text-xs font-medium mt-1">{tab.label}</span>

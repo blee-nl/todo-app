@@ -312,7 +312,7 @@ describe("ActiveTodoItem", () => {
     fireEvent.click(textElement);
 
     // Should show date picker
-    expect(screen.getByTestId("custom-datetime-picker")).toBeInTheDocument();
+    expect(screen.getByTestId("due-date-input")).toBeInTheDocument();
   });
 
   it("should not show date picker in edit mode for daily tasks", () => {
@@ -332,7 +332,7 @@ describe("ActiveTodoItem", () => {
 
     // Should not show date picker for daily tasks
     expect(
-      screen.queryByTestId("custom-datetime-picker")
+      screen.queryByTestId("due-date-input")
     ).not.toBeInTheDocument();
   });
 });

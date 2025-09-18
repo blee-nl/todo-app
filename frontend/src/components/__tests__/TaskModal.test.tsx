@@ -237,7 +237,7 @@ describe("TaskModal", () => {
     expect(submitButton).toBeDisabled();
   });
 
-  it("should disable submit button when due date is missing for one-time tasks", () => {
+  it("should enable submit button when text is provided (due date is optional)", () => {
     render(
       <TaskModal
         isOpen={true}
@@ -252,7 +252,7 @@ describe("TaskModal", () => {
     fireEvent.change(textInput, { target: { value: "Test task" } });
 
     const submitButton = screen.getByRole("button", { name: /add task/i });
-    expect(submitButton).toBeDisabled();
+    expect(submitButton).toBeEnabled();
   });
 
   it("should enable submit button when all required fields are filled", () => {

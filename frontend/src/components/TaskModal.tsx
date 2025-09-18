@@ -71,7 +71,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const showNotificationSettings = Boolean(dueAt);
 
   // Calculate button disabled state
-  const isSubmitDisabled = isCreating || !text.trim() || (isOneTimeType && !dueAt);
+  const isSubmitDisabled = isCreating || !text.trim();
 
   const handleNotificationEnabledChange = useCallback(async (enabled: boolean) => {
     // Always update the state first to reflect user intent
@@ -159,7 +159,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           {/* Task Type */}
           <div>
             <Label className="mb-2">Task Type</Label>
-            <div className="flex space-x-2">
+            <div className="flex space-x-2" data-testid="todo-type-select">
               <Button
                 type="button"
                 variant={isOneTimeType ? "primary" : "secondary"}
@@ -167,6 +167,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 className="flex-1"
                 onClick={handleSelectOneTimeType}
                 leftIcon={<TaskIcon size="sm" />}
+                data-testid="todo-type-one-time"
               >
                 One-time
               </Button>
@@ -177,6 +178,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 className="flex-1"
                 onClick={handleSelectDailyType}
                 leftIcon={<HabitIcon size="sm" />}
+                data-testid="todo-type-daily"
               >
                 Daily
               </Button>
@@ -196,6 +198,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
               current: text.length,
               max: 500,
             }}
+            data-testid="todo-input"
           />
 
           {/* Due Date & Time */}
